@@ -1,0 +1,11 @@
+--- a/src/bootstrap/native.rs
++++ b/src/bootstrap/native.rs
+@@ -134,7 +134,7 @@ fn run(self, builder: &Builder<'_>) -> PathBuf {
+
+         builder.update_submodule(&Path::new("src").join("llvm-project"));
+         if builder.config.llvm_link_shared
+-            && (target.contains("windows") || target.contains("apple-darwin"))
++            && (target.contains("windows"))
+         {
+             panic!("shared linking to LLVM is not currently supported on {}", target.triple);
+         }

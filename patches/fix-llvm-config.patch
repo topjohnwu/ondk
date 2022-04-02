@@ -1,0 +1,14 @@
+diff --git a/llvm/tools/llvm-config/llvm-config.cpp b/llvm/tools/llvm-config/llvm-config.cpp
+index 1a2f04552d13..f6125dd80c41 100644
+--- a/llvm/tools/llvm-config/llvm-config.cpp
++++ b/llvm/tools/llvm-config/llvm-config.cpp
+@@ -418,8 +418,7 @@ int main(int argc, char **argv) {
+   const bool BuiltSharedLibs = !!LLVM_ENABLE_SHARED;
+ 
+   bool DyLibExists = false;
+-  const std::string DyLibName =
+-      (SharedPrefix + "LLVM-" + SharedVersionedExt).str();
++  const std::string DyLibName = (SharedPrefix + "LLVM." + SharedExt).str();
+ 
+   // If LLVM_LINK_DYLIB is ON, the single shared library will be returned
+   // for "--libs", etc, if they exist. This behaviour can be overridden with
