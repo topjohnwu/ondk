@@ -21,10 +21,14 @@ if [ $OS = "darwin" ]; then
   NDK_DIRNAME='darwin-x86_64'
   TRIPLE='x86_64-apple-darwin'
   DYN_EXT='dylib'
+
+  brew install ninja
 else
   NDK_DIRNAME='linux-x86_64'
   TRIPLE='x86_64-unknown-linux-gnu'
   DYN_EXT='so'
+
+  sudo apt-get install ninja-build
 fi
 
 # Build
