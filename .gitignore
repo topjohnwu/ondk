@@ -1,4 +1,5 @@
-/out
-/ndk
 /rust
+/out
+/dist
+/ondk-*
 android-ndk-*.zip

@@ -4,6 +4,7 @@ set -e
 
 RUST_VERSION='1.59.0'
 NDK_VERSION='r23b'
+OUTPUT_VERSION='r23b.0'
 OS=$(uname | tr '[:upper:]' '[:lower:]')
 
 # Clone the rust repository
@@ -69,3 +70,8 @@ rm -f libclang_cxx.* libclang.so.12git libLLVM-12git.so libLTO.so.12git libRemar
 cd ../lib
 mkdir clang
 ln -s ../../lib64/clang/12.0.8 clang/13.0.0
+
+# Archive packages
+mv ndk "ondk-${OUTPUT_VERSION}"
+mkdir dist
+tar zcvf "dist/ondk-${OUTPUT_VERSION}-${OS}.tar.gz" "ondk-${OUTPUT_VERSION}"
