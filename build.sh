@@ -39,9 +39,9 @@ cd ../
 # Finish up the output directory
 cd out
 cp -af ../rust/build/$TRIPLE/llvm/bin llvm-bin
-ln -s ../lib/rustlib/x86_64-apple-darwin/bin/rust-lld llvm-bin/lld
+ln -s ../lib/rustlib/$TRIPLE/bin/rust-lld llvm-bin/lld
 ln -s lld llvm-bin/ld
-find ../rust/build/$TRIPLE/llvm/lib -type f -name "*.${DYN_EXT}*" -exec cp -an {} lib \;
+find ../rust/build/$TRIPLE/llvm/lib -name "*.${DYN_EXT}*" -exec cp -an {} lib \;
 cd ..
 
 # Download latest NDK
@@ -55,9 +55,8 @@ cp -af out ndk/toolchains/rust
 # Redirect libraries
 cd ndk/toolchains/rust/lib
 mkdir clang
-cd clang
-ln -s ../../../llvm/prebuilt/$NDK_DIRNAME/lib64/clang/12.0.8 13.0.0
-cd ../../../
+ln -s ../../../llvm/prebuilt/$NDK_DIRNAME/lib64/clang/12.0.8 clang/13.0.0
+cd ../../
 
 # Replace files with those from the rust toolchain
 cd llvm/prebuilt/$NDK_DIRNAME/bin
@@ -65,8 +64,8 @@ ln -sf ../../../../rust/llvm-bin/* .
 rm clang-12
 cd ../lib64
 ln -sf ../../../../rust/lib/*.$DYN_EXT* .
-rm libclang_cxx.*  # libclang-cxx is unused
+# Remove files that is replaced
+rm -f libclang_cxx.* libclang.so.12git libLLVM-12git.so libLTO.so.12git libRemarks.so.12git
 cd ../lib
 mkdir clang
-cd clang
-ln -s ../../lib64/clang/12.0.8 13.0.0
+ln -s ../../lib64/clang/12.0.8 clang/13.0.0
