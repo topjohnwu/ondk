@@ -22,9 +22,3 @@ sysconfdir = "etc"
 lld = true
 llvm-tools = true
 jemalloc = true
-use-lld = true
-
-[target.x86_64-unknown-linux-gnu]
-cc = "clang-12"
-cxx = "clang++-12"
-linker = "clang-12"

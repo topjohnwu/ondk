@@ -1,0 +1,29 @@
+changelog-seen = 2
+
+[llvm]
+thin-lto = true
+targets = "AArch64;ARM;X86"
+experimental-targets = ""
+link-shared = true
+version-suffix = ""
+clang = true
+
+[build]
+docs = false
+submodules = false
+extended = true
+tools = ["cargo", "src"]
+
+[install]
+prefix = "../out"
+sysconfdir = "etc"
+
+[rust]
+lld = true
+llvm-tools = true
+use-lld = true
+
+[target.x86_64-unknown-linux-gnu]
+cc = "clang-12"
+cxx = "clang++-12"
+linker = "clang-12"

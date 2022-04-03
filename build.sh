@@ -12,13 +12,16 @@ git clone --depth 1 --branch $RUST_VERSION https://github.com/rust-lang/rust.git
 cd rust
 git submodule update --init --depth=1
 
+# Patch rust bootstrap
+patch -p1 < ../patches/patch-bootstrap-native.patch
+
 # OS specific stuffs
 if [ $OS = "darwin" ]; then
-  # Apply patches required for macOS
-  patch -p1 < ../patches/macos-llvm-link-shared.patch
+  # Dirty fix on llvm-config for macOS
   cd src/llvm-project
   patch -p1 < ../../../patches/fix-llvm-config.patch
   cd ../../
+
   NDK_DIRNAME='darwin-x86_64'
   TRIPLE='x86_64-apple-darwin'
   DYN_EXT='dylib'
@@ -33,7 +36,7 @@ else
 fi
 
 # Build
-python3 ./x.py --config ../config.toml install
+python3 ./x.py --config "../config-${OS}.toml" install
 
 cd ../
 

@@ -1,0 +1,62 @@
+--- a/src/bootstrap/native.rs
++++ b/src/bootstrap/native.rs
+@@ -134,7 +134,7 @@ fn run(self, builder: &Builder<'_>) -> PathBuf {
+
+         builder.update_submodule(&Path::new("src").join("llvm-project"));
+         if builder.config.llvm_link_shared
+-            && (target.contains("windows") || target.contains("apple-darwin"))
++            && (target.contains("windows"))
+         {
+             panic!("shared linking to LLVM is not currently supported on {}", target.triple);
+         }
+@@ -220,13 +220,6 @@ fn run(self, builder: &Builder<'_>) -> PathBuf {
+             cfg.define("LLVM_ENABLE_ZLIB", "OFF");
+         }
+
+-        if builder.config.llvm_thin_lto {
+-            cfg.define("LLVM_ENABLE_LTO", "Thin");
+-            if !target.contains("apple") {
+-                cfg.define("LLVM_ENABLE_LLD", "ON");
+-            }
+-        }
+-
+         // This setting makes the LLVM tools link to the dynamic LLVM library,
+         // which saves both memory during parallel links and overall disk space
+         // for the tools. We don't do this on every platform as it doesn't work
+@@ -343,14 +336,6 @@ fn run(self, builder: &Builder<'_>) -> PathBuf {
+             cfg.define("LLVM_VERSION_SUFFIX", suffix);
+         }
+
+-        if let Some(ref linker) = builder.config.llvm_use_linker {
+-            cfg.define("LLVM_USE_LINKER", linker);
+-        }
+-
+-        if builder.config.llvm_allow_old_toolchain {
+-            cfg.define("LLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN", "YES");
+-        }
+-
+         configure_cmake(builder, target, &mut cfg, true);
+
+         // FIXME: we don't actually need to build all LLVM tools and all LLVM
+@@ -502,6 +487,21 @@ fn configure_cmake(
+             .define("CMAKE_ASM_COMPILER", sanitize_cc(cc));
+     }
+
++    if builder.config.llvm_thin_lto {
++        cfg.define("LLVM_ENABLE_LTO", "Thin");
++        if !target.contains("apple") {
++            cfg.define("LLVM_ENABLE_LLD", "ON");
++        }
++    }
++
++    if let Some(ref linker) = builder.config.llvm_use_linker {
++        cfg.define("LLVM_USE_LINKER", linker);
++    }
++
++    if builder.config.llvm_allow_old_toolchain {
++        cfg.define("LLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN", "YES");
++    }
++
+     cfg.build_arg("-j").build_arg(builder.jobs().to_string());
+     let mut cflags = builder.cflags(target, GitRepo::Llvm).join(" ");
+     if let Some(ref s) = builder.config.llvm_cflags {
