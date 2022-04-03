@@ -70,6 +70,7 @@ rm -f libclang_cxx.* libclang.so.12git libLLVM-12git.so libLTO.so.12git libRemar
 cd ../lib
 mkdir clang
 ln -s ../../lib64/clang/12.0.8 clang/13.0.0
+cd ../../../../../../
 
 # Archive packages
 mv ndk "ondk-${OUTPUT_VERSION}"
