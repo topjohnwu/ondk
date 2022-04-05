@@ -27,6 +27,7 @@ clone() {
   git submodule update --init --depth=1
 
   patch -p1 < ../patches/patch-bootstrap-native.patch
+  patch -p1 < ../patches/forced-vendored-openssl.patch
 
   if [ $OS = "darwin" ]; then
     # Dirty fix of llvm-config for macOS
