@@ -2,80 +2,102 @@
 
 set -e
 
-RUST_VERSION='1.59.0'
-NDK_VERSION='r23b'
-OUTPUT_VERSION='r23b.0'
+RUST_VERSION='beta'
+NDK_VERSION='r24'
+OUTPUT_VERSION='r24.0'
 OS=$(uname | tr '[:upper:]' '[:lower:]')
 
-# Clone the rust repository
-git clone --depth 1 --branch $RUST_VERSION https://github.com/rust-lang/rust.git
-cd rust
-git submodule update --init --depth=1
-
-# Patch rust bootstrap
-patch -p1 < ../patches/patch-bootstrap-native.patch
-
-# OS specific stuffs
 if [ $OS = "darwin" ]; then
-  # Dirty fix on llvm-config for macOS
-  cd src/llvm-project
-  patch -p1 < ../../../patches/fix-llvm-config.patch
-  cd ../../
-
   NDK_DIRNAME='darwin-x86_64'
   TRIPLE='x86_64-apple-darwin'
   DYN_EXT='dylib'
 
-  brew install ninja
+  command -v ninja || brew install ninja
 else
   NDK_DIRNAME='linux-x86_64'
   TRIPLE='x86_64-unknown-linux-gnu'
   DYN_EXT='so'
 
-  sudo apt-get install ninja-build
+  command -v ninja || sudo apt-get install ninja-build
 fi
 
-# Build
-python3 ./x.py --config "../config-${OS}.toml" install
+clone() {
+  git clone --depth 1 --branch $RUST_VERSION https://github.com/rust-lang/rust.git
+  cd rust
+  git submodule update --init --depth=1
 
-cd ../
+  patch -p1 < ../patches/patch-bootstrap-native.patch
 
-# Finish up the output directory
-cd out
-cp -af ../rust/build/$TRIPLE/llvm/bin llvm-bin
-ln -s ../lib/rustlib/$TRIPLE/bin/rust-lld llvm-bin/lld
-ln -s lld llvm-bin/ld
-find ../rust/build/$TRIPLE/llvm/lib -name "*.${DYN_EXT}*" -exec cp -an {} lib \;
-cd ..
+  if [ $OS = "darwin" ]; then
+    # Dirty fix of llvm-config for macOS
+    cd src/llvm-project
+    patch -p1 < ../../../patches/fix-llvm-config.patch
+    cd ../../
+  fi
 
-# Download latest NDK
-curl -O -L "https://dl.google.com/android/repository/android-ndk-${NDK_VERSION}-${OS}.zip"
-unzip -q "android-ndk-${NDK_VERSION}-${OS}.zip"
-mv "android-ndk-${NDK_VERSION}" ndk
+  cd ../
+}
 
-# Copy the whole output folder into ndk
-cp -af out ndk/toolchains/rust
+build() {
+  cd rust
+  python3 ./x.py --config "../config-${OS}.toml" install
+  cd ../
 
-# Redirect libraries
-cd ndk/toolchains/rust/lib
-mkdir clang
-ln -s ../../../llvm/prebuilt/$NDK_DIRNAME/lib64/clang/12.0.8 clang/13.0.0
-cd ../../
+  cd out
+  cp -af ../rust/build/$TRIPLE/llvm/bin llvm-bin
+  cp -af ../rust/build/$TRIPLE/llvm/lib/clang/14.0.0/include clang-include
+  ln -s ../lib/rustlib/$TRIPLE/bin/rust-lld llvm-bin/lld
+  ln -s lld llvm-bin/ld
+  find ../rust/build/$TRIPLE/llvm/lib -name "*.${DYN_EXT}*" -exec cp -an {} lib \;
+  cd ..
+}
 
-# Replace files with those from the rust toolchain
-cd llvm/prebuilt/$NDK_DIRNAME/bin
-ln -sf ../../../../rust/llvm-bin/* .
-rm clang-12
-cd ../lib64
-ln -sf ../../../../rust/lib/*.$DYN_EXT* .
-# Remove files that is replaced
-rm -f libclang_cxx.* libclang.so.12git libLLVM-12git.so libLTO.so.12git libRemarks.so.12git
-cd ../lib
-mkdir clang
-ln -s ../../lib64/clang/12.0.8 clang/13.0.0
-cd ../../../../../../
+ndk() {
+  local NDK_ZIP="android-ndk-${NDK_VERSION}-${OS}.zip"
 
-# Archive packages
-mv ndk "ondk-${OUTPUT_VERSION}"
-mkdir dist
-tar zcvf "dist/ondk-${OUTPUT_VERSION}-${OS}.tar.gz" "ondk-${OUTPUT_VERSION}"
+  # Download and extract
+  [ -f $NDK_ZIP ] || curl -O -L "https://dl.google.com/android/repository/$NDK_ZIP"
+  unzip -q $NDK_ZIP
+  mv "android-ndk-${NDK_VERSION}" ndk
+
+  # Copy the whole output folder into ndk
+  cp -af out ndk/toolchains/rust
+
+  # Replace headers
+  cd ndk/toolchains
+  mv llvm/prebuilt/$NDK_DIRNAME llvm.dir
+  ln -s ../../llvm.dir llvm/prebuilt/$NDK_DIRNAME
+  rm -rf llvm.dir/lib64/clang/14.0.1/include
+  mv rust/clang-include llvm.dir/lib64/clang/14.0.1/include
+
+  # Redirect library
+  cd rust/lib
+  mkdir clang
+  ln -s ../../../llvm.dir/lib64/clang/14.0.1 clang/14.0.0
+  cd ../../
+
+  # Replace files with those from the rust toolchain
+  cd llvm.dir/bin
+  ln -sf ../../rust/llvm-bin/* .
+  rm clang-14
+  cd ../lib64
+  ln -sf ../../rust/lib/*.$DYN_EXT* .
+  rm -f libclang.so.13 libLLVM-14git.so libLTO.so.14git libRemarks.so.14git
+
+  # Redirect library
+  cd ../lib
+  mkdir clang
+  ln -s ../../lib64/clang/14.0.1 clang/14.0.0
+  cd ../../
+}
+
+archive() {
+  mv ndk "ondk-${OUTPUT_VERSION}"
+  mkdir dist
+  tar zcvf "dist/ondk-${OUTPUT_VERSION}-${OS}.tar.gz" "ondk-${OUTPUT_VERSION}"
+}
+
+clone
+build
+ndk
+archive
