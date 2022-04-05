@@ -89,7 +89,7 @@ ndk() {
   cd ../lib
   mkdir clang
   ln -s ../../lib64/clang/14.0.1 clang/14.0.0
-  cd ../../
+  cd ../../../../
 }
 
 archive() {
