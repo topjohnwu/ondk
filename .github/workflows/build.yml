@@ -4,13 +4,11 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
-    name: Build on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+  linux:
+    name: Build for Linux
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest]
 
     steps:
       - name: Check out
@@ -24,11 +22,75 @@ jobs:
           python-version: "3.x"
 
       - name: Build toolchain
-        run: ./build.sh
+        run: ./build.sh x86_64
 
-      # Only upload artifacts built on Linux
       - name: Upload build artifact
         uses: actions/upload-artifact@v3
         with:
-          name: ondk-${{ runner.os }}
+          name: ondk-linux
+          path: dist/*.tar.gz
+
+  macos-stage-1:
+    name: Build for macOS (stage 1)
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python 3
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.x"
+
+      - name: Build toolchain
+        run: ./build.sh x86_64
+
+      - name: Upload stage 1 artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: macos-stage-1
+          path: tmp/stage-1.tar.gz
+
+  macos-stage-2:
+    name: Build for macOS (stage 2)
+    needs: macos-stage-1
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python 3
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.x"
+
+      - name: Download stage 1 artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: macos-stage-1
+          path: tmp
+
+      - name: Remove stage 1 artifact
+        uses: geekyeggo/delete-artifact@v1
+        with:
+          name: macos-stage-1
+          failOnError: false
+
+      - name: Build toolchain
+        run: ./build.sh aarch64
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ondk-macos
           path: dist/*.tar.gz
