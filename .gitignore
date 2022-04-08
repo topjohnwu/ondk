@@ -1,6 +1,5 @@
 /rust
 /out
 /dist
-/ondk-*
 /tmp
-android-ndk-*.zip
+/*.zip

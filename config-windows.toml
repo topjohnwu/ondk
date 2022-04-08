@@ -1,0 +1,21 @@
+changelog-seen = 2
+
+[llvm]
+targets = "AArch64;ARM;X86"
+experimental-targets = ""
+version-suffix = ""
+clang = true
+
+[build]
+docs = false
+submodules = false
+extended = true
+tools = ["cargo", "src"]
+
+[install]
+prefix = "../out"
+sysconfdir = "etc"
+
+[rust]
+lld = true
+llvm-tools = true

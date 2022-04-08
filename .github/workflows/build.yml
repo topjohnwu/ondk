@@ -30,6 +30,32 @@ jobs:
           name: ondk-linux
           path: dist/*.tar.gz
 
+  windows:
+    name: Build for Windows
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python 3
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.x"
+
+      - name: Build toolchain
+        run: bash build-windows.sh
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ondk-windows
+          path: dist/*.tar.gz
+
   macos-stage-1:
     name: Build for macOS (stage 1)
     runs-on: macos-latest
