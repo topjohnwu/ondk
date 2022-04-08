@@ -98,7 +98,7 @@ ndk() {
 dist() {
   mv ndk "ondk-${OUTPUT_VERSION}"
   mkdir dist
-  tar zcvf "dist/ondk-${OUTPUT_VERSION}-${OS}.tar.gz" "ondk-${OUTPUT_VERSION}"
+  tar zcf "dist/ondk-${OUTPUT_VERSION}-${OS}.tar.gz" "ondk-${OUTPUT_VERSION}"
 }
 
 clone

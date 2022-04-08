@@ -108,7 +108,7 @@ ndk() {
 dist() {
   mv ndk "ondk-${OUTPUT_VERSION}"
   mkdir dist
-  tar zcvf "dist/ondk-${OUTPUT_VERSION}-${OS}.tar.gz" "ondk-${OUTPUT_VERSION}"
+  tar zcf "dist/ondk-${OUTPUT_VERSION}-${OS}.tar.gz" "ondk-${OUTPUT_VERSION}"
 }
 
 universal() {
@@ -140,7 +140,7 @@ if [ $OS = "darwin" -a $ARCH = "aarch64" ]; then
     echo '! Missing stage 1 artifacts'
     exit 1
   fi
-  tar zxvf tmp/stage-1.tar.gz
+  tar zxf tmp/stage-1.tar.gz
   mv out out.x86
 fi
 
@@ -150,7 +150,7 @@ if [ $OS = "darwin" ]; then
   if [ $ARCH = "x86_64" ]; then
     # Pack up first stage artifacts
     mkdir tmp
-    tar zcvf tmp/stage-1.tar.gz rust/build/$TRIPLE out
+    tar zcf tmp/stage-1.tar.gz rust/build/$TRIPLE out
     # Exit early
     exit 0
   else
