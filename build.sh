@@ -9,9 +9,8 @@ if [ -z $1 ]; then
   exit 1
 fi
 
-RUST_VERSION='beta'
-NDK_VERSION='r24'
-OUTPUT_VERSION='r24.0'
+. common.sh
+
 OS=$(uname | tr '[:upper:]' '[:lower:]')
 ARCH="$1"
 
@@ -33,24 +32,6 @@ else
 
   command -v ninja >/dev/null || sudo apt-get install ninja-build
 fi
-
-clone() {
-  git clone --depth 1 --branch $RUST_VERSION https://github.com/rust-lang/rust.git
-  cd rust
-  git submodule update --init --depth=1
-
-  patch -p1 < ../patches/patch-bootstrap-native.patch
-  patch -p1 < ../patches/forced-vendored-openssl.patch
-
-  if [ $OS = "darwin" ]; then
-    # Dirty fix of llvm-config for macOS
-    cd src/llvm-project
-    patch -p1 < ../../../patches/fix-llvm-config.patch
-    cd ../../
-  fi
-
-  cd ../
-}
 
 build() {
   cd rust
@@ -103,12 +84,6 @@ ndk() {
   mkdir clang
   ln -s ../../lib64/clang/14.0.1 clang/14.0.0
   cd ../../../../
-}
-
-dist() {
-  mv ndk "ondk-${OUTPUT_VERSION}"
-  mkdir dist
-  tar zcf "dist/ondk-${OUTPUT_VERSION}-${OS}.tar.gz" "ondk-${OUTPUT_VERSION}"
 }
 
 universal() {

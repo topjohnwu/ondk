@@ -8,25 +8,12 @@ if ! uname | grep -q 'MINGW64_NT'; then
   exit 1
 fi
 
-RUST_VERSION='beta'
-NDK_VERSION='r24'
-OUTPUT_VERSION='r24.0'
-OS='windows'
+. common.sh
 
+OS='windows'
 NDK_DIRNAME='windows-x86_64'
 TRIPLE='x86_64-pc-windows-msvc'
 DYN_EXT='dll'
-
-clone() {
-  git clone --depth 1 --branch $RUST_VERSION https://github.com/rust-lang/rust.git
-  cd rust
-  git submodule update --init --depth=1
-
-  patch -p1 < ../patches/patch-bootstrap-native.patch
-  patch -p1 < ../patches/forced-vendored-openssl.patch
-
-  cd ../
-}
 
 build() {
   if ! command -v ninja >/dev/null; then
@@ -93,12 +80,6 @@ ndk() {
   rm -rf rust/llvm-bin
 
   cd ../../
-}
-
-dist() {
-  mv ndk "ondk-${OUTPUT_VERSION}"
-  mkdir dist
-  tar zcf "dist/ondk-${OUTPUT_VERSION}-${OS}.tar.gz" "ondk-${OUTPUT_VERSION}"
 }
 
 clone
