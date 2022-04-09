@@ -45,7 +45,6 @@ jobs:
       - name: Build toolchain
         shell: bash
         run: |
-          mkdir /c/ondk
           git clone https://github.com/topjohnwu/ondk.git /c/ondk
           cd /c/ondk
           bash build-windows.sh
@@ -54,7 +53,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ondk-windows
-          path: dist/*.tar.gz
+          path: C:\ondk\dist\*.tar.gz
 
   macos-stage-1:
     name: Build for macOS (stage 1)
