@@ -15,12 +15,21 @@ NDK_DIRNAME='windows-x86_64'
 TRIPLE='x86_64-pc-windows-msvc'
 DYN_EXT='dll'
 
+clean_storage() {
+  # Clean up storage to fit in all our build output
+  rm -rf /c/SeleniumWebDrivers /c/selenium /c/Android /c/msys64 /c/tools /c/Modules \
+    '/c/Program Files/PostgreSQL' '/c/Program Files/dotnet' \
+    "$JAVA_HOME_8_X64" "$JAVA_HOME_11_X64" "$JAVA_HOME_17_X64" \
+    "$GOROOT_1_15_X64" "$GOROOT_1_16_X64" "$GOROOT_1_17_X64" "$GOROOT_1_18_X64"
+}
+
 build() {
   if ! command -v ninja >/dev/null; then
     if [ ! -d ninja ]; then
       curl -L -O https://github.com/ninja-build/ninja/releases/download/v1.10.2/ninja-win.zip
       mkdir ninja
       unzip -q ninja-win.zip -d ninja
+      rm ninja-win.zip
     fi
     export PATH="$(pwd)/ninja:$PATH"
   fi
@@ -32,6 +41,7 @@ build() {
     curl -L -O https://strawberryperl.com/download/5.32.1.1/strawberry-perl-5.32.1.1-64bit-portable.zip
     mkdir strawberry
     unzip -q strawberry-perl-*.zip -d strawberry
+    rm strawberry-perl-*.zip
   fi
 
   cd rust
@@ -82,6 +92,7 @@ ndk() {
   cd ../../
 }
 
+clean_storage
 clone
 build
 ndk
