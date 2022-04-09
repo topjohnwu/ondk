@@ -1,6 +1,7 @@
 changelog-seen = 2
 
 [llvm]
+skip-rebuild = true
 thin-lto = true
 targets = "AArch64;ARM;X86"
 experimental-targets = ""

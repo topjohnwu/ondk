@@ -125,7 +125,7 @@ if [ $OS = "darwin" ]; then
   if [ $ARCH = "x86_64" ]; then
     # Pack up first stage artifacts
     mkdir tmp
-    tar zcf tmp/stage-1.tar.gz rust/build/$TRIPLE out
+    tar zcf tmp/stage-1.tar.gz rust/build/$TRIPLE/ll* out
     # Exit early
     exit 0
   else
