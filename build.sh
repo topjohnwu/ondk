@@ -40,7 +40,7 @@ build() {
 
   cd out
   cp -af ../rust/build/$TRIPLE/llvm/bin llvm-bin
-  cp -af ../rust/build/$TRIPLE/llvm/lib/clang/14.0.0/include clang-include
+  cp -af ../rust/build/$TRIPLE/llvm/lib/clang/$RUST_CLANG/include clang-include
   ln -s ../lib/rustlib/$TRIPLE/bin/rust-lld llvm-bin/lld
   ln -s lld llvm-bin/ld
   find ../rust/build/$TRIPLE/llvm/lib -name "*.${DYN_EXT}*" -exec cp -an {} lib \;
@@ -62,13 +62,13 @@ ndk() {
   cd ndk/toolchains
   mv llvm/prebuilt/$NDK_DIRNAME llvm.dir
   ln -s ../../llvm.dir llvm/prebuilt/$NDK_DIRNAME
-  rm -rf llvm.dir/lib64/clang/14.0.1/include
-  mv rust/clang-include llvm.dir/lib64/clang/14.0.1/include
+  rm -rf llvm.dir/lib64/clang/$NDK_CLANG/include
+  mv rust/clang-include llvm.dir/lib64/clang/$NDK_CLANG/include
 
   # Redirect library
   cd rust/lib
   mkdir clang
-  ln -s ../../../llvm.dir/lib64/clang/14.0.1 clang/14.0.0
+  ln -s ../../../llvm.dir/lib64/clang/$NDK_CLANG clang/$RUST_CLANG
   cd ../../
 
   # Replace files with those from the rust toolchain
@@ -82,7 +82,7 @@ ndk() {
   # Redirect library
   cd ../lib
   mkdir clang
-  ln -s ../../lib64/clang/14.0.1 clang/14.0.0
+  ln -s ../../lib64/clang/$NDK_CLANG clang/$RUST_CLANG
   cd ../../../../
 }
 

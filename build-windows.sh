@@ -54,7 +54,7 @@ build() {
   cp -af ../rust/build/$TRIPLE/llvm/bin llvm-bin
   cp -af ../rust/build/$TRIPLE/lld/bin/. llvm-bin/.
   cp -af llvm-bin/lld llvm-bin/ld
-  cp -af ../rust/build/$TRIPLE/llvm/lib/clang/14.0.0/include clang-include
+  cp -af ../rust/build/$TRIPLE/llvm/lib/clang/$RUST_CLANG/include clang-include
   cd ..
 }
 
@@ -73,12 +73,12 @@ ndk() {
   local LLVM_DIR=llvm/prebuilt/$NDK_DIRNAME
 
   # Replace headers
-  rm -rf $LLVM_DIR/lib64/clang/14.0.1/include
-  mv rust/clang-include $LLVM_DIR/lib64/clang/14.0.1/include
+  rm -rf $LLVM_DIR/lib64/clang/$NDK_CLANG/include
+  mv rust/clang-include $LLVM_DIR/lib64/clang/$NDK_CLANG/include
 
   # Move library
   mkdir -p $LLVM_DIR/lib/clang
-  mv $LLVM_DIR/lib64/clang/14.0.1 $LLVM_DIR/lib/clang/14.0.0
+  mv $LLVM_DIR/lib64/clang/$NDK_CLANG $LLVM_DIR/lib/clang/$RUST_CLANG
 
   # Replace llvm files with those from the rust toolchain
   for b in $LLVM_DIR/bin/*; do

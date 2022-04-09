@@ -2,6 +2,9 @@ RUST_VERSION='beta'
 NDK_VERSION='r24'
 OUTPUT_VERSION='r24.0'
 
+RUST_CLANG='14.0.0'
+NDK_CLANG='14.0.1'
+
 clone() {
   git clone --depth 1 --branch $RUST_VERSION https://github.com/rust-lang/rust.git
   cd rust
