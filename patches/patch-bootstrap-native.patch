@@ -1,6 +1,6 @@
 --- a/src/bootstrap/native.rs
 +++ b/src/bootstrap/native.rs
-@@ -157,7 +157,7 @@ fn run(self, builder: &Builder<'_>) -> PathBuf {
+@@ -154,7 +154,7 @@ fn run(self, builder: &Builder<'_>) -> PathBuf {
 
          builder.update_submodule(&Path::new("src").join("llvm-project"));
          if builder.config.llvm_link_shared
@@ -9,7 +9,7 @@
          {
              panic!("shared linking to LLVM is not currently supported on {}", target.triple);
          }
-@@ -244,13 +244,6 @@ fn run(self, builder: &Builder<'_>) -> PathBuf {
+@@ -241,13 +241,6 @@ fn run(self, builder: &Builder<'_>) -> PathBuf {
              cfg.define("LLVM_ENABLE_ZLIB", "OFF");
          }
 
@@ -23,7 +23,7 @@
          // This setting makes the LLVM tools link to the dynamic LLVM library,
          // which saves both memory during parallel links and overall disk space
          // for the tools. We don't do this on every platform as it doesn't work
-@@ -327,9 +320,10 @@ fn run(self, builder: &Builder<'_>) -> PathBuf {
+@@ -324,9 +317,10 @@ fn run(self, builder: &Builder<'_>) -> PathBuf {
              // FIXME: if the llvm root for the build triple is overridden then we
              //        should use llvm-tblgen from there, also should verify that it
              //        actually exists most of the time in normal installs of LLVM.
@@ -35,7 +35,7 @@
              cfg.define("LLVM_NM", host_bin.join("llvm-nm").with_extension(EXE_EXTENSION));
              cfg.define(
                  "LLVM_CONFIG_PATH",
-@@ -352,14 +346,6 @@ fn run(self, builder: &Builder<'_>) -> PathBuf {
+@@ -349,14 +343,6 @@ fn run(self, builder: &Builder<'_>) -> PathBuf {
              cfg.define("LLVM_VERSION_SUFFIX", suffix);
          }
 
@@ -50,7 +50,7 @@
          configure_cmake(builder, target, &mut cfg, true, ldflags);
 
          for (key, val) in &builder.config.llvm_build_config {
-@@ -516,6 +502,21 @@ fn configure_cmake(
+@@ -513,6 +499,21 @@ fn configure_cmake(
              .define("CMAKE_ASM_COMPILER", sanitize_cc(cc));
      }
 

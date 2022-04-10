@@ -1,6 +1,6 @@
 --- a/llvm/tools/llvm-config/llvm-config.cpp
 +++ b/llvm/tools/llvm-config/llvm-config.cpp
-@@ -418,8 +418,7 @@ int main(int argc, char **argv) {
+@@ -424,8 +424,7 @@ int main(int argc, char **argv) {
    const bool BuiltSharedLibs = !!LLVM_ENABLE_SHARED;
 
    bool DyLibExists = false;

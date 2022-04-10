@@ -1,6 +1,6 @@
 --- a/src/bootstrap/tool.rs
 +++ b/src/bootstrap/tool.rs
-@@ -619,7 +619,7 @@ fn run(self, builder: &Builder<'_>) -> PathBuf {
+@@ -617,7 +617,7 @@ fn run(self, builder: &Builder<'_>) -> PathBuf {
                  path: "src/tools/cargo",
                  is_optional_tool: false,
                  source_type: SourceType::Submodule,
