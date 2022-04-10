@@ -2,6 +2,9 @@ name: ondk build
 
 on:
   workflow_dispatch:
+  push:
+    tags:
+      - "*"
 
 jobs:
   linux:
@@ -26,9 +29,16 @@ jobs:
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v3
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         with:
           name: ondk-linux
           path: dist/*.tar.gz
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v1
+        if: ${{ github.event_name == 'push' }}
+        with:
+          files: dist/*.tar.gz
 
   windows:
     name: Build for Windows
@@ -51,9 +61,16 @@ jobs:
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v3
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         with:
           name: ondk-windows
           path: C:\ondk\dist\*.tar.gz
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v1
+        if: ${{ github.event_name == 'push' }}
+        with:
+          files: C:\ondk\dist\*.tar.gz
 
   macos-stage-1:
     name: Build for macOS (stage 1)
@@ -116,6 +133,13 @@ jobs:
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v3
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         with:
           name: ondk-macos
           path: dist/*.tar.gz
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v1
+        if: ${{ github.event_name == 'push' }}
+        with:
+          files: dist/*.tar.gz
