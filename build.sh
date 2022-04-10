@@ -20,8 +20,8 @@ if [ $OS = "darwin" ]; then
   DYN_EXT='dylib'
 
   if [ $ARCH = "aarch64" ]; then
-    # Configure jemalloc to use 64k pages for Apple Silicon
-    export JEMALLOC_SYS_WITH_LG_PAGE=16
+    # Configure jemalloc to use 16k pages for Apple Silicon
+    export JEMALLOC_SYS_WITH_LG_PAGE=14
   fi
 
   command -v ninja >/dev/null || brew install ninja
