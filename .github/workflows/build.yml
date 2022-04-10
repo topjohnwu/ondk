@@ -10,8 +10,6 @@ jobs:
   linux:
     name: Build for Linux
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
 
     steps:
       - name: Check out
@@ -43,8 +41,6 @@ jobs:
   windows:
     name: Build for Windows
     runs-on: windows-latest
-    strategy:
-      fail-fast: false
 
     steps:
       - name: Set up Python 3
@@ -75,8 +71,6 @@ jobs:
   macos-stage-1:
     name: Build for macOS (stage 1)
     runs-on: macos-latest
-    strategy:
-      fail-fast: false
 
     steps:
       - name: Check out
@@ -102,8 +96,6 @@ jobs:
     name: Build for macOS (stage 2)
     needs: macos-stage-1
     runs-on: macos-latest
-    strategy:
-      fail-fast: false
 
     steps:
       - name: Check out
@@ -122,12 +114,6 @@ jobs:
           name: macos-stage-1
           path: tmp
 
-      - name: Remove stage 1 artifact
-        uses: geekyeggo/delete-artifact@v1
-        with:
-          name: macos-stage-1
-          failOnError: false
-
       - name: Build toolchain
         run: ./build.sh aarch64
 
@@ -143,3 +129,9 @@ jobs:
         if: ${{ github.event_name == 'push' }}
         with:
           files: dist/*.tar.gz
+
+      - name: Remove stage 1 artifact
+        uses: geekyeggo/delete-artifact@v1
+        with:
+          name: macos-stage-1
+          failOnError: false
