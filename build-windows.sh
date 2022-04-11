@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Copyright 2022 Google LLC.
+# SPDX-License-Identifier: Apache-2.0
+
 set -e
 
 if ! uname | grep -q 'MINGW64_NT'; then
