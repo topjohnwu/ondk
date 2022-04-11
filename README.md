@@ -4,18 +4,20 @@ This is not an officially supported Google product.
 
 Oxidized NDK (ONDK) is an unofficial repackaged [Android NDK](https://developer.android.com/ndk) that includes a Rust toolchain.
 This repository hosts build scripts to build and package ONDK using [GitHub Actions](https://github.com/topjohnwu/ondk/actions).
-Every file included in the final package either originates from the official NDK zip, or is built in GitHub Actions virtual environment using the build scripts.
+Every file included in the final package either originates from the official NDK zip or is built in GitHub Actions.
 
-This project does not include and attempt to do any modifications to Rust and LLVM.<br>
-This project is for experimental purposes, and **does not** guarantee any Android NDK and Rust functionality. Use at your own risk.
+This project does not include or attempt to do any modifications to Rust and LLVM.<br>
+This project is for experimental purposes, and **does not** guarantee any Android NDK or Rust functionality.<br>
+Use at your own risk.
 
-Download the latest ONDK [release](https://github.com/topjohnwu/ondk/releases/latest).
+Download the latest ONDK in [releases](https://github.com/topjohnwu/ondk/releases/latest).
 
-Supports all NDK host platforms: x64 Linux, x64 Windows, and x64 + arm64 macOS (macOS build uses univeral binaries).
+Supports all NDK host platforms:<br>
+Linux (x64), Windows (x64), and macOS (x64 + arm64, universal binaries).
 
 ## How to Use
 
-For building C/C++ code, ONDK is just like any ordinary Android NDK, no special configurations is needed.
+For building C/C++ code, ONDK is just like any ordinary Android NDK, no special configurations are needed.
 
 For building Rust code, link ONDK's Rust toolchain with `rustup`:
 
@@ -42,11 +44,9 @@ export TARGET_CFLAGS='--target=aarch64-linux-android21'
 cargo <+name> build -Z build-std --target aarch64-linux-android
 ```
 
-P.S. I strongly recommend checking out [min-sized-rust](https://github.com/johnthagen/min-sized-rust) for best practices on how to minimize your final Rust product.
+P.S. I strongly recommend checking out [min-sized-rust](https://github.com/johnthagen/min-sized-rust) to minimize Rust binaries.
 
 ## How ONDK is Built
-
-The build scripts does the following:
 
 - Download the latest [Rust](https://github.com/rust-lang/rust/tree/beta) source code from its `beta` branch
 - Apply some patches to its build system (no patches to any code that is part of the final product)
