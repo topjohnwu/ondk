@@ -44,7 +44,7 @@ build() {
   cd out
   cp -af ../rust/build/$TRIPLE/llvm/bin llvm-bin
   cp -af ../rust/build/$TRIPLE/llvm/lib/clang/$RUST_CLANG/include clang-include
-  ln -s ../lib/rustlib/$TRIPLE/bin/rust-lld llvm-bin/lld
+  cp -af lib/rustlib/$TRIPLE/bin/rust-lld llvm-bin/lld
   ln -s lld llvm-bin/ld
   find ../rust/build/$TRIPLE/llvm/lib -name "*.${DYN_EXT}*" -exec cp -an {} lib \;
   cd ..
@@ -92,12 +92,6 @@ ndk() {
 universal() {
   cp -af out.x86 out
   cp -an out.arm/. out/. || true
-
-  # Replace lld link with universal binary
-  rm out/llvm-bin/lld
-  lipo -create -output out/llvm-bin/lld \
-    out/lib/rustlib/x86_64-apple-darwin/bin/rust-lld \
-    out/lib/rustlib/aarch64-apple-darwin/bin/rust-lld
 
   # Merge all Mach-O files as universal binary and adhoc codesign
   find out -type f -exec sh -c "file {} | grep -q Mach-O" \; -print0 | \
