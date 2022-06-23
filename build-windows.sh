@@ -53,6 +53,8 @@ build() {
     --build $TRIPLE install
   cd ../
 
+  RUST_CLANG=$(rust/build/$TRIPLE/llvm/bin/llvm-config --version)
+
   cd out
   cp -af ../rust/build/$TRIPLE/llvm/bin llvm-bin
   cp -af ../rust/build/$TRIPLE/lld/bin/. llvm-bin/.

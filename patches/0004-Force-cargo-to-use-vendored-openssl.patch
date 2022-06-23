@@ -1,0 +1,25 @@
+From cd042bfd802ca7fa33e4ac378db57c3e0712443b Mon Sep 17 00:00:00 2001
+From: topjohnwu <topjohnwu@google.com>
+Date: Wed, 22 Jun 2022 23:32:05 -0700
+Subject: [PATCH 4/4] Force cargo to use vendored openssl
+
+---
+ src/bootstrap/tool.rs | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/bootstrap/tool.rs b/src/bootstrap/tool.rs
+index 905fa431d29..9f422c1df59 100644
+--- a/src/bootstrap/tool.rs
++++ b/src/bootstrap/tool.rs
+@@ -613,7 +613,7 @@ fn run(self, builder: &Builder<'_>) -> PathBuf {
+                 path: "src/tools/cargo",
+                 is_optional_tool: false,
+                 source_type: SourceType::Submodule,
+-                extra_features: Vec::new(),
++                extra_features: vec!["vendored-openssl".to_string()],
+             })
+             .expect("expected to build -- essential tool");
+ 
+-- 
+2.36.1
+

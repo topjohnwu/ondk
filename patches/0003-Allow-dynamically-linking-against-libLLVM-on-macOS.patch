@@ -1,0 +1,93 @@
+From 06176cd81a3d2974c7ed564f039ba74759be9c7d Mon Sep 17 00:00:00 2001
+From: topjohnwu <topjohnwu@google.com>
+Date: Wed, 22 Jun 2022 23:05:20 -0700
+Subject: [PATCH 3/4] Allow dynamically linking against libLLVM on macOS
+
+Create symlinks to workaround file missing error in llvm-config
+---
+ src/bootstrap/native.rs | 39 ++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 34 insertions(+), 5 deletions(-)
+
+diff --git a/src/bootstrap/native.rs b/src/bootstrap/native.rs
+index dfbf16ef4b2..04d8c8c07bd 100644
+--- a/src/bootstrap/native.rs
++++ b/src/bootstrap/native.rs
+@@ -239,7 +239,7 @@ fn run(self, builder: &Builder<'_>) -> PathBuf {
+ 
+         builder.update_submodule(&Path::new("src").join("llvm-project"));
+         if builder.llvm_link_shared()
+-            && (target.contains("windows") || target.contains("apple-darwin"))
++            && (target.contains("windows") || (target.contains("apple-darwin") && !cfg!(unix)))
+         {
+             panic!("shared linking to LLVM is not currently supported on {}", target.triple);
+         }
+@@ -346,7 +346,9 @@ fn run(self, builder: &Builder<'_>) -> PathBuf {
+         //
+         // If we're not linking rustc to a dynamic LLVM, though, then don't link
+         // tools to it.
+-        if builder.llvm_link_tools_dynamically(target) && builder.llvm_link_shared() {
++        let llvm_link_shared =
++            builder.llvm_link_tools_dynamically(target) && builder.llvm_link_shared();
++        if llvm_link_shared {
+             cfg.define("LLVM_LINK_LLVM_DYLIB", "ON");
+         }
+ 
+@@ -430,18 +432,21 @@ fn run(self, builder: &Builder<'_>) -> PathBuf {
+             }
+         }
+ 
++        let mut llvm_suffix: Option<String> = None;
+         if let Some(ref suffix) = builder.config.llvm_version_suffix {
+             // Allow version-suffix="" to not define a version suffix at all.
+             if !suffix.is_empty() {
+-                cfg.define("LLVM_VERSION_SUFFIX", suffix);
++                llvm_suffix = Some(suffix.to_string());
+             }
+         } else if builder.config.channel == "dev" {
+             // Changes to a version suffix require a complete rebuild of the LLVM.
+             // To avoid rebuilds during a time of version bump, don't include rustc
+             // release number on the dev channel.
+-            cfg.define("LLVM_VERSION_SUFFIX", "-rust-dev");
++            llvm_suffix = Some("-rust-dev".to_string())
+         } else {
+-            let suffix = format!("-rust-{}-{}", builder.version, builder.config.channel);
++            llvm_suffix = Some(format!("-rust-{}-{}", builder.version, builder.config.channel))
++        }
++        if let Some(ref suffix) = llvm_suffix {
+             cfg.define("LLVM_VERSION_SUFFIX", suffix);
+         }
+ 
+@@ -470,6 +475,30 @@ fn run(self, builder: &Builder<'_>) -> PathBuf {
+ 
+         cfg.build();
+ 
++        // When building LLVM with LLVM_LINK_LLVM_DYLIB for macOS, an unversioned
++        // libLLVM.dylib will be built. However, llvm-config will still look
++        // for a versioned path like libLLVM-14.dylib. Manually create a symbolic
++        // link to make llvm-config happy.
++        #[cfg(unix)]
++        if llvm_link_shared && target.contains("apple-darwin") {
++            let mut cmd = Command::new(&build_llvm_config);
++            let version = output(cmd.arg("--version"));
++            let major = version.split('.').next().unwrap();
++            let lib_name = match llvm_suffix {
++                Some(s) => format!("lib/libLLVM-{}{}.dylib", major, s),
++                None => format!("lib/libLLVM-{}.dylib", major),
++            };
++
++            // The reason why we build the library path from llvm-config is because
++            // the output of llvm-config depends on its location in the file system.
++            // Make sure we create the symlink exactly where it's needed.
++            let llvm_base = build_llvm_config.parent().unwrap().parent().unwrap();
++            let lib_llvm = llvm_base.join(lib_name);
++            if std::os::unix::fs::symlink("libLLVM.dylib", &lib_llvm).is_err() {
++                panic!("unable to create symbolic link {:?}", lib_llvm.file_name());
++            }
++        }
++
+         t!(stamp.write());
+ 
+         build_llvm_config
+-- 
+2.36.1
+
