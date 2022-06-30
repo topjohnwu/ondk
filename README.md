@@ -48,7 +48,7 @@ P.S. I strongly recommend checking out [min-sized-rust](https://github.com/johnt
 
 ## How ONDK is Built
 
-- Download the latest [Rust](https://github.com/rust-lang/rust/tree/beta) source code from its `beta` branch
+- Download the latest [Rust](https://github.com/rust-lang/rust) source code
 - Apply some patches to its build system (no patches to any code that is part of the final product)
 - Build a Rust sysroot with `rustc` + `cargo` + `std` source code + `clang`
 - Download the latest stable [NDK](https://developer.android.com/ndk/downloads) zip

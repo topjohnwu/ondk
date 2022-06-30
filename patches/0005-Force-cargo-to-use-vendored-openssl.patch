@@ -1,7 +1,7 @@
-From cd042bfd802ca7fa33e4ac378db57c3e0712443b Mon Sep 17 00:00:00 2001
+From e248ffc32713fc3bf79c0c30cac1276729813301 Mon Sep 17 00:00:00 2001
 From: topjohnwu <topjohnwu@google.com>
 Date: Wed, 22 Jun 2022 23:32:05 -0700
-Subject: [PATCH 4/4] Force cargo to use vendored openssl
+Subject: [PATCH 5/5] Force cargo to use vendored openssl
 
 ---
  src/bootstrap/tool.rs | 2 +-
