@@ -1,7 +1,7 @@
-From e7f3d2ca02d13eff6b1a53d436a1fc361ce72286 Mon Sep 17 00:00:00 2001
+From e996fea239edba5d5b6c1542ce59527f029dad7e Mon Sep 17 00:00:00 2001
 From: topjohnwu <topjohnwu@google.com>
 Date: Tue, 21 Jun 2022 01:31:16 -0700
-Subject: [PATCH 1/5] Fix cross compiling on macOS
+Subject: [PATCH 1/4] Fix cross compiling on macOS
 
 When cross compiling LLVM on an arm64 machine to x86_64, CMake will
 produce universal binaries by default, causing link errors. Explicitly
@@ -11,7 +11,7 @@ set CMAKE_OSX_ARCHITECTURES to the one single target architecture.
  1 file changed, 13 insertions(+), 1 deletion(-)
 
 diff --git a/src/bootstrap/native.rs b/src/bootstrap/native.rs
-index 9cd8b6d1455..983ba2d30d2 100644
+index 8395be40f9b..c6d6c256c28 100644
 --- a/src/bootstrap/native.rs
 +++ b/src/bootstrap/native.rs
 @@ -429,7 +429,6 @@ fn run(self, builder: &Builder<'_>) -> PathBuf {
@@ -22,7 +22,7 @@ index 9cd8b6d1455..983ba2d30d2 100644
              cfg.define("LLVM_TABLEGEN", host_bin.join("llvm-tblgen").with_extension(EXE_EXTENSION));
              cfg.define("LLVM_NM", host_bin.join("llvm-nm").with_extension(EXE_EXTENSION));
              cfg.define(
-@@ -526,6 +525,8 @@ fn configure_cmake(
+@@ -547,6 +546,8 @@ fn configure_cmake(
      cfg.target(&target.triple).host(&builder.config.build.triple);
  
      if target != builder.config.build {
@@ -31,7 +31,7 @@ index 9cd8b6d1455..983ba2d30d2 100644
          if target.contains("netbsd") {
              cfg.define("CMAKE_SYSTEM_NAME", "NetBSD");
          } else if target.contains("freebsd") {
-@@ -543,6 +544,17 @@ fn configure_cmake(
+@@ -564,6 +565,17 @@ fn configure_cmake(
          // Since, the LLVM itself makes rather limited use of version checks in
          // CMakeFiles (and then only in tests), and so far no issues have been
          // reported, the system version is currently left unset.

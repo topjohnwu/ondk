@@ -1,7 +1,7 @@
-From 397322b48b18af402403166fc341788b9c74bd63 Mon Sep 17 00:00:00 2001
+From 0813c8be4a287711e62ee514a910bc6a6971a1a6 Mon Sep 17 00:00:00 2001
 From: topjohnwu <topjohnwu@google.com>
 Date: Wed, 29 Jun 2022 20:09:12 -0700
-Subject: [PATCH 4/5] Set llvm configs when building lld
+Subject: [PATCH 3/4] Set llvm configs when building lld
 
 ---
  src/bootstrap/native.rs | 11 +++++++++++

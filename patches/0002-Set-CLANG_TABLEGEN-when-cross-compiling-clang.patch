@@ -1,7 +1,7 @@
-From f7b66b2ade7e8e3b1e8e7ab8afdd0f9fdb86dadb Mon Sep 17 00:00:00 2001
+From 270b7d89bcfc366487aee295388a1b32e3028946 Mon Sep 17 00:00:00 2001
 From: topjohnwu <topjohnwu@google.com>
 Date: Sat, 25 Jun 2022 03:59:31 -0700
-Subject: [PATCH 2/5] Set CLANG_TABLEGEN when cross compiling clang
+Subject: [PATCH 2/4] Set CLANG_TABLEGEN when cross compiling clang
 
 When cross compiling rustc with `llvm.clang = true`, CLANG_TABLEGEN
 has to be set to the host clang-tblgen executable to build clang.
@@ -10,7 +10,7 @@ has to be set to the host clang-tblgen executable to build clang.
  1 file changed, 9 insertions(+)
 
 diff --git a/src/bootstrap/native.rs b/src/bootstrap/native.rs
-index 983ba2d30d2..247e0476f06 100644
+index c6d6c256c28..b196b55c5e7 100644
 --- a/src/bootstrap/native.rs
 +++ b/src/bootstrap/native.rs
 @@ -430,11 +430,20 @@ fn run(self, builder: &Builder<'_>) -> PathBuf {
@@ -33,7 +33,7 @@ index 983ba2d30d2..247e0476f06 100644
 +            }
          }
  
-         if let Some(ref suffix) = builder.config.llvm_version_suffix {
+         let llvm_version_suffix = if let Some(ref suffix) = builder.config.llvm_version_suffix {
 -- 
 2.36.1
 

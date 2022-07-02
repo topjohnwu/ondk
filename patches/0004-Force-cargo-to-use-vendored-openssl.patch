@@ -1,14 +1,14 @@
-From e248ffc32713fc3bf79c0c30cac1276729813301 Mon Sep 17 00:00:00 2001
+From b4e501473de90bd389c1f4f1aef8a60cf99f9c02 Mon Sep 17 00:00:00 2001
 From: topjohnwu <topjohnwu@google.com>
 Date: Wed, 22 Jun 2022 23:32:05 -0700
-Subject: [PATCH 5/5] Force cargo to use vendored openssl
+Subject: [PATCH 4/4] Force cargo to use vendored openssl
 
 ---
  src/bootstrap/tool.rs | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/bootstrap/tool.rs b/src/bootstrap/tool.rs
-index 905fa431d29..9f422c1df59 100644
+index 5be6841e988..0d8674db8ad 100644
 --- a/src/bootstrap/tool.rs
 +++ b/src/bootstrap/tool.rs
 @@ -613,7 +613,7 @@ fn run(self, builder: &Builder<'_>) -> PathBuf {
