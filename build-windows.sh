@@ -56,10 +56,10 @@ build() {
   RUST_CLANG=$(rust/build/$TRIPLE/llvm/bin/llvm-config --version)
 
   cd out
-  cp -af ../rust/build/$TRIPLE/llvm/bin llvm-bin
-  cp -af ../rust/build/$TRIPLE/lld/bin/. llvm-bin/.
-  cp -af llvm-bin/lld llvm-bin/ld
-  cp -af ../rust/build/$TRIPLE/llvm/lib/clang/$RUST_CLANG/include clang-include
+  cp -afL ../rust/build/$TRIPLE/llvm/bin llvm-bin
+  cp -afL ../rust/build/$TRIPLE/lld/bin/. llvm-bin/.
+  cp -afL llvm-bin/lld llvm-bin/ld
+  cp -afL ../rust/build/$TRIPLE/llvm/lib/clang/$RUST_CLANG/include clang-include
   cd ..
 }
 
@@ -72,7 +72,7 @@ ndk() {
   mv "android-ndk-${NDK_VERSION}" ndk
 
   # Copy the whole output folder into ndk
-  cp -af out ndk/toolchains/rust
+  cp -afL out ndk/toolchains/rust
 
   cd ndk/toolchains
   local LLVM_DIR=llvm/prebuilt/$NDK_DIRNAME
@@ -89,7 +89,7 @@ ndk() {
   for b in $LLVM_DIR/bin/*; do
     local a="rust/llvm-bin/$(basename $b)"
     if [ -f $a ]; then
-      cp -af $a $b
+      cp -afL $a $b
     fi
   done
   rm -rf rust/llvm-bin
