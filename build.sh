@@ -116,6 +116,11 @@ if [ $OS = "darwin" -a $ARCH = "aarch64" ]; then
   fi
   tar zxf tmp/stage-1.tar.gz
   mv out out.x86
+  # FIXME: For some unknown reason, Mach-O larger than 8MB will always be corrupted
+  cp -af rust/build/x86_64-apple-darwin/llvm/lib/*.dylib \
+    rust/build/x86_64-apple-darwin/llvm/build/lib
+  cp -af rust/build/x86_64-apple-darwin/llvm/bin/. \
+    rust/build/x86_64-apple-darwin/llvm/build/bin
 fi
 
 build
