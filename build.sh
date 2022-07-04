@@ -41,7 +41,11 @@ build() {
   python3 ./x.py --config "../config-${OS}.toml" --host $TRIPLE install
   cd ../
 
-  RUST_CLANG=$(rust/build/$TRIPLE/llvm/bin/llvm-config --version)
+  if [ $OS = "darwin" -a $ARCH = "aarch64" ]; then
+    RUST_CLANG=$(rust/build/x86_64-apple-darwin/llvm/bin/llvm-config --version)
+  else
+    RUST_CLANG=$(rust/build/$TRIPLE/llvm/bin/llvm-config --version)
+  fi
 
   cd out
   cp -af ../rust/build/$TRIPLE/llvm/bin llvm-bin
