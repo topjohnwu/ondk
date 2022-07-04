@@ -8,12 +8,12 @@ OUTPUT_VERSION='r24.2'
 NDK_CLANG='14.0.1'
 
 clone() {
-  git clone --depth 1 --branch $RUST_VERSION https://github.com/rust-lang/rust.git
+  git clone --depth 1 --branch $RUST_VERSION https://github.com/topjohnwu/rust.git
   cd rust
   git submodule update --init --depth=1
-  for p in ../patches/*.patch; do
-    patch -p1 < $p
-  done
+  # for p in ../patches/*.patch; do
+  #   patch -p1 < $p
+  # done
   cd ../
 }
 
