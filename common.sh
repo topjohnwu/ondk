@@ -2,10 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 RUST_VERSION='master'
-NDK_VERSION='r24'
-OUTPUT_VERSION='r24.2'
+NDK_VERSION='r25'
+OUTPUT_VERSION='r25.0'
 
-NDK_CLANG='14.0.1'
+NDK_CLANG='14.0.6'
 
 clone() {
   git clone --depth 1 --branch $RUST_VERSION https://github.com/topjohnwu/rust.git

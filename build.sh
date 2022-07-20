@@ -86,7 +86,7 @@ ndk() {
   rm clang-14
   cd ../lib64
   ln -sf ../../rust/lib/*.$DYN_EXT* .
-  rm -f libclang.so.13 libLLVM-14git.so libLTO.so.14git libRemarks.so.14git
+  rm -f libclang.so.13 libclang-cpp.so.14git libLLVM-14git.so libLTO.so.14git libRemarks.so.14git
 
   # Redirect library
   cd ../lib
