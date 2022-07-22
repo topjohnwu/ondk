@@ -12,7 +12,7 @@ clang = true
 docs = false
 submodules = false
 extended = true
-tools = ["cargo", "src"]
+tools = ["cargo", "src", "clippy", "rust-analyzer", "rustfmt"]
 
 [install]
 prefix = "../out"
