@@ -1,0 +1,13 @@
+diff --git a/src/bootstrap/tool.rs b/src/bootstrap/tool.rs
+index 06fa5039fdf..8d64adca09b 100644
+--- a/src/bootstrap/tool.rs
++++ b/src/bootstrap/tool.rs
+@@ -617,7 +617,7 @@ fn run(self, builder: &Builder<'_>) -> PathBuf {
+                 path: "src/tools/cargo",
+                 is_optional_tool: false,
+                 source_type: SourceType::Submodule,
+-                extra_features: Vec::new(),
++                extra_features: vec!["vendored-openssl".to_string()],
+             })
+             .expect("expected to build -- essential tool");
+ 
