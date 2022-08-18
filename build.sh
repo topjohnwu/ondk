@@ -5,32 +5,40 @@
 
 set -e
 
-if [ -z $1 ]; then
-  echo "Usage: $0 <arch>"
-  echo "<arch> is either x86_64 or aarch64"
-  echo
-  exit 1
-fi
-
 . common.sh
 
 OS=$(uname | tr '[:upper:]' '[:lower:]')
-ARCH="$1"
+NATIVE_ARCH=$(uname -m)
+if [ $NATIVE_ARCH = "arm64" ]; then
+  # Apple calls aarch64 arm64
+  NATIVE_ARCH='aarch64'
+fi
+
+if [ -z $1 ]; then
+  # Build the native architecture by default
+  ARCH=$NATIVE_ARCH
+else
+  ARCH=$1
+fi
 
 if [ $OS = "darwin" ]; then
   NDK_DIRNAME='darwin-x86_64'
   TRIPLE="${ARCH}-apple-darwin"
+  NATIVE_TRIPLE="${NATIVE_ARCH}-apple-darwin"
   DYN_EXT='dylib'
 
   if [ $ARCH = "aarch64" ]; then
-    # Configure jemalloc to use 16k pages for Apple Silicon
+    # Apple Silicon uses 16k pages
     export JEMALLOC_SYS_WITH_LG_PAGE=14
+  else
+    export JEMALLOC_SYS_WITH_LG_PAGE=12
   fi
 
   command -v ninja >/dev/null || brew install ninja
 else
   NDK_DIRNAME='linux-x86_64'
   TRIPLE="${ARCH}-unknown-linux-gnu"
+  NATIVE_TRIPLE="${NATIVE_ARCH}-unknown-linux-gnu"
   DYN_EXT='so'
 
   command -v ninja >/dev/null || sudo apt-get install ninja-build
@@ -41,11 +49,7 @@ build() {
   python3 ./x.py --config "../config-${OS}.toml" --host $TRIPLE install
   cd ../
 
-  if [ $OS = "darwin" -a $ARCH = "aarch64" ]; then
-    RUST_CLANG=$(rust/build/x86_64-apple-darwin/llvm/bin/llvm-config --version)
-  else
-    RUST_CLANG=$(rust/build/$TRIPLE/llvm/bin/llvm-config --version)
-  fi
+  RUST_CLANG=$(rust/build/$NATIVE_TRIPLE/llvm/bin/llvm-config --version)
 
   cd out
   cp -af ../rust/build/$TRIPLE/llvm/bin llvm-bin
@@ -113,7 +117,7 @@ universal() {
 
 clone
 
-if [ $OS = "darwin" -a $ARCH = "aarch64" ]; then
+if [ -n "$GITHUB_ACTION" -a $OS = "darwin" -a $ARCH = "aarch64" ]; then
   if [ ! -f tmp/stage-1.tar.gz ]; then
     echo '! Missing stage 1 artifacts'
     exit 1
@@ -129,7 +133,7 @@ fi
 
 build
 
-if [ $OS = "darwin" ]; then
+if [ -n "$GITHUB_ACTION" -a $OS = "darwin" ]; then
   if [ $ARCH = "x86_64" ]; then
     # Pack up first stage artifacts
     mkdir tmp
