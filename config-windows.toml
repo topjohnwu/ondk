@@ -5,12 +5,15 @@ targets = "AArch64;ARM;X86"
 experimental-targets = ""
 version-suffix = ""
 clang = true
+static-libstdcpp = true
+ldflags = "-static-libgcc -static"
 
 [build]
 docs = false
 submodules = false
 extended = true
 tools = ["cargo", "src", "clippy", "rust-analyzer", "rustfmt"]
+cargo-native-static = true
 
 [install]
 prefix = "../out"

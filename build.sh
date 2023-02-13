@@ -42,6 +42,7 @@ else
   DYN_EXT='so'
 
   command -v ninja >/dev/null || sudo apt-get install ninja-build
+  command -v lld >/dev/null || sudo apt-get install lld
 fi
 
 build() {
@@ -55,7 +56,7 @@ build() {
   cp -af ../rust/build/$TRIPLE/llvm/bin llvm-bin
   cp -af ../rust/build/$TRIPLE/llvm/lib/clang/$RUST_CLANG/include clang-include
   cp -af lib/rustlib/$TRIPLE/bin/rust-lld llvm-bin/lld
-  ln -s lld llvm-bin/ld
+  ln -sf lld llvm-bin/ld
   find ../rust/build/$TRIPLE/llvm/lib -name "*.${DYN_EXT}*" -exec cp -an {} lib \;
   cd ..
 }
