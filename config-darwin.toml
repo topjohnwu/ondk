@@ -1,13 +1,13 @@
 changelog-seen = 2
 
 [llvm]
-skip-rebuild = true
 thin-lto = true
 targets = "AArch64;ARM;X86"
 experimental-targets = ""
 link-shared = true
 version-suffix = ""
 clang = true
+download-ci-llvm = false
 
 [build]
 docs = false

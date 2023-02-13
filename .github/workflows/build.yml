@@ -41,17 +41,24 @@ jobs:
   windows:
     name: Build for Windows
     runs-on: windows-latest
-
+    defaults:
+      run:
+        shell: msys2 {0}
     steps:
-      - name: Set up Python 3
-        uses: actions/setup-python@v2
+      - name: Check out
+        uses: actions/checkout@v2
         with:
-          python-version: "3.x"
+          fetch-depth: 1
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: ucrt64
+          update: true
+          install: make diffutils tar patch unzip gzip mingw-w64-ucrt-x86_64-7zip mingw-w64-ucrt-x86_64-python mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-ninja
 
       - name: Build toolchain
-        shell: bash
         run: |
-          git clone https://github.com/topjohnwu/ondk.git /c/ondk
+          cp -r $GITHUB_WORKSPACE /c/ondk
           cd /c/ondk
           bash build-windows.sh
 
@@ -63,7 +70,8 @@ jobs:
           path: C:\ondk\dist\*.tar.gz
 
       - name: Upload release assets
-        uses: softprops/action-gh-release@v1
+        # https://github.com/softprops/action-gh-release/issues/280
+        uses: softprops/action-gh-release@v0.1.13
         if: ${{ github.event_name == 'push' }}
         with:
           files: C:\ondk\dist\*.tar.gz
