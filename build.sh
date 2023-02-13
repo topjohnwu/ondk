@@ -42,6 +42,7 @@ else
   DYN_EXT='so'
 
   command -v ninja >/dev/null || sudo apt-get install ninja-build
+  command -v lld >/dev/null || sudo apt-get install lld
 fi
 
 build() {
@@ -49,13 +50,13 @@ build() {
   python3 ./x.py --config "../config-${OS}.toml" --host $TRIPLE install
   cd ../
 
-  RUST_CLANG=$(rust/build/$NATIVE_TRIPLE/llvm/bin/llvm-config --version)
-
   cd out
   cp -af ../rust/build/$TRIPLE/llvm/bin llvm-bin
-  cp -af ../rust/build/$TRIPLE/llvm/lib/clang/$RUST_CLANG/include clang-include
+  if [ $ARCH = "x86_64" ]; then
+    cp -af $(../rust/build/$TRIPLE/llvm/bin/clang -print-resource-dir)/include clang-include
+  fi
   cp -af lib/rustlib/$TRIPLE/bin/rust-lld llvm-bin/lld
-  ln -s lld llvm-bin/ld
+  ln -sf lld llvm-bin/ld
   find ../rust/build/$TRIPLE/llvm/lib -name "*.${DYN_EXT}*" -exec cp -an {} lib \;
   cd ..
 }
@@ -73,16 +74,11 @@ ndk() {
 
   # Replace headers
   cd ndk/toolchains
+  local NDK_RES=$(llvm/prebuilt/$NDK_DIRNAME/bin/clang -print-resource-dir)
   mv llvm/prebuilt/$NDK_DIRNAME llvm.dir
   ln -s ../../llvm.dir llvm/prebuilt/$NDK_DIRNAME
-  rm -rf llvm.dir/lib64/clang/$NDK_CLANG/include
-  mv rust/clang-include llvm.dir/lib64/clang/$NDK_CLANG/include
-
-  # Redirect library
-  cd rust/lib
-  mkdir clang
-  ln -s ../../../llvm.dir/lib64/clang/$NDK_CLANG clang/$RUST_CLANG
-  cd ../../
+  rm -rf $NDK_RES/include
+  mv rust/clang-include $NDK_RES/include
 
   # Replace files with those from the rust toolchain
   cd llvm.dir/bin
@@ -91,12 +87,13 @@ ndk() {
   cd ../lib64
   ln -sf ../../rust/lib/*.$DYN_EXT* .
   rm -f libclang.so.13 libclang-cpp.so.14git libLLVM-14git.so libLTO.so.14git libRemarks.so.14git
+  cd ../..
 
   # Redirect library
-  cd ../lib
-  mkdir clang
-  ln -s ../../lib64/clang/$NDK_CLANG clang/$RUST_CLANG
-  cd ../../../../
+  mkdir -p $(dirname $(llvm.dir/bin/clang -print-resource-dir))
+  mv $NDK_RES $(llvm.dir/bin/clang -print-resource-dir)
+  ln -s ../../rust/lib/clang llvm.dir/lib/clang
+  cd ../..
 }
 
 universal() {

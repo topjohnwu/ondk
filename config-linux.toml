@@ -7,6 +7,7 @@ experimental-targets = ""
 link-shared = true
 version-suffix = ""
 clang = true
+download-ci-llvm = false
 
 [build]
 docs = false
@@ -24,6 +25,6 @@ llvm-tools = true
 use-lld = true
 
 [target.x86_64-unknown-linux-gnu]
-cc = "clang-12"
-cxx = "clang++-12"
-linker = "clang-12"
+cc = "clang-14"
+cxx = "clang++-14"
+linker = "clang-14"
