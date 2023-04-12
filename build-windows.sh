@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2022 Google LLC.
+# Copyright 2022-2023 Google LLC.
 # SPDX-License-Identifier: Apache-2.0
 
 set -e
@@ -126,7 +126,7 @@ ndk() {
           cp -af $c $d
           link $d $b
         fi
-    fi	
+    fi
   done
 
   # Move library
@@ -139,7 +139,7 @@ ndk() {
   cd ../../
 }
 
-export PATH='/c/Program Files/Git/cmd':$PATH 
+export PATH='/c/Program Files/Git/cmd':$PATH
 
 clean_storage
 clone

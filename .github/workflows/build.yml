@@ -70,11 +70,10 @@ jobs:
           path: C:\ondk\dist\*.tar.gz
 
       - name: Upload release assets
-        # https://github.com/softprops/action-gh-release/issues/280
-        uses: softprops/action-gh-release@v0.1.13
+        uses: softprops/action-gh-release@v1
         if: ${{ github.event_name == 'push' }}
         with:
-          files: C:\ondk\dist\*.tar.gz
+          files: C:/ondk/dist/*.tar.gz
 
   macos-stage-1:
     name: Build for macOS (stage 1)

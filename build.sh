@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2022 Google LLC.
+# Copyright 2022-2023 Google LLC.
 # SPDX-License-Identifier: Apache-2.0
 
 set -e
@@ -52,9 +52,7 @@ build() {
 
   cd out
   cp -af ../rust/build/$TRIPLE/llvm/bin llvm-bin
-  if [ $ARCH = "x86_64" ]; then
-    cp -af $(../rust/build/$TRIPLE/llvm/bin/clang -print-resource-dir)/include clang-include
-  fi
+  cp -af $(../rust/build/$NATIVE_TRIPLE/llvm/bin/clang -print-resource-dir)/include clang-include
   cp -af lib/rustlib/$TRIPLE/bin/rust-lld llvm-bin/lld
   ln -sf lld llvm-bin/ld
   find ../rust/build/$TRIPLE/llvm/lib -name "*.${DYN_EXT}*" -exec cp -an {} lib \;
