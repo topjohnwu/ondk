@@ -30,8 +30,6 @@ if [ $OS = "darwin" ]; then
   if [ $ARCH = "aarch64" ]; then
     # Apple Silicon uses 16k pages
     export JEMALLOC_SYS_WITH_LG_PAGE=14
-  else
-    export JEMALLOC_SYS_WITH_LG_PAGE=12
   fi
 
   command -v ninja >/dev/null || brew install ninja
