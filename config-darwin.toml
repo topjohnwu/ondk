@@ -23,4 +23,6 @@ sysconfdir = "etc"
 lld = true
 llvm-tools = true
 jemalloc = true
-lto = "thin"
+
+# Cannot enable: https://github.com/rust-lang/rust/issues/110296
+# lto = "thin"
