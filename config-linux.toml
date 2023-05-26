@@ -20,6 +20,7 @@ prefix = "../out"
 sysconfdir = "etc"
 
 [rust]
+channel = "nightly"
 lld = true
 llvm-tools = true
 use-lld = true

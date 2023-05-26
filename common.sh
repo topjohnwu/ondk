@@ -1,9 +1,9 @@
 # Copyright 2022-2023 Google LLC.
 # SPDX-License-Identifier: Apache-2.0
 
-RUST_VERSION='c14882f74e8feb3f76ae85ed5cd66afaccd1da67'
+RUST_VERSION='1a5f8bce74ee432f7cc3aa131bc3d6920e06de10'
 NDK_VERSION='r25c'
-OUTPUT_VERSION='r25.3'
+OUTPUT_VERSION='r25.4'
 
 clone() {
   mkdir rust
