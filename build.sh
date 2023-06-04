@@ -49,6 +49,7 @@ build() {
   cd ../
 
   cd out
+  find . -name '*.old' -delete
   cp -af ../rust/build/$TRIPLE/llvm/bin llvm-bin
   cp -af $(../rust/build/$NATIVE_TRIPLE/llvm/bin/clang -print-resource-dir)/include clang-include
   cp -af lib/rustlib/$TRIPLE/bin/rust-lld llvm-bin/lld
@@ -68,11 +69,14 @@ ndk() {
   # Copy the whole output folder into ndk
   cp -af out ndk/toolchains/rust
 
-  # Replace headers
   cd ndk/toolchains
-  local NDK_RES=$(llvm/prebuilt/$NDK_DIRNAME/bin/clang -print-resource-dir)
+
+  # Move llvm folder to llvm.dir
   mv llvm/prebuilt/$NDK_DIRNAME llvm.dir
   ln -s ../../llvm.dir llvm/prebuilt/$NDK_DIRNAME
+
+  # Replace headers
+  local NDK_RES=$(llvm.dir/bin/clang -print-resource-dir)
   rm -rf $NDK_RES/include
   mv rust/clang-include $NDK_RES/include
 
@@ -85,7 +89,7 @@ ndk() {
   rm -f libclang.so.13 libclang-cpp.so.14git libLLVM-14git.so libLTO.so.14git libRemarks.so.14git
   cd ../..
 
-  # Redirect library
+  # Now that clang is replaced, move files to the correct location
   mkdir -p $(dirname $(llvm.dir/bin/clang -print-resource-dir))
   mv $NDK_RES $(llvm.dir/bin/clang -print-resource-dir)
   ln -s ../../rust/lib/clang llvm.dir/lib/clang
