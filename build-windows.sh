@@ -30,7 +30,7 @@ clean_storage() {
 
 build() {
   cd rust
-  python ./x.py --config '../config-windows.toml' --host $TRIPLE install
+  python ./x.py --config '../config-windows.toml' --build $TRIPLE install
   cd ../
 
   cd out
