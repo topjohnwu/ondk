@@ -50,11 +50,13 @@ jobs:
         with:
           fetch-depth: 1
 
-      - uses: msys2/setup-msys2@v2
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
         with:
-          msystem: ucrt64
+          msystem: UCRT64
           update: true
-          install: make diffutils tar patch unzip gzip mingw-w64-ucrt-x86_64-7zip mingw-w64-ucrt-x86_64-python mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-ninja
+          install: make diffutils tar patch unzip gzip
+          pacboy: 7zip:p python:p cmake:p gcc:p ninja:p
 
       - name: Build toolchain
         run: |

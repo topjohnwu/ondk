@@ -5,4 +5,4 @@
 
 set -e
 
-rm -rf rust out out.arm out.x86 android-ndk-*.zip ndk ondk-* dist tmp
+rm -rf rust out out.arm out.x86 android-ndk-*.zip ndk ondk-* dist tmp mingw.7z mingw64
