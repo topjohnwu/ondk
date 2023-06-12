@@ -6,7 +6,7 @@ experimental-targets = ""
 version-suffix = ""
 clang = true
 static-libstdcpp = true
-ldflags = "-static-libgcc -static"
+ldflags = "-s -static-libgcc -static"
 download-ci-llvm = false
 
 [build]
