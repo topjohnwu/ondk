@@ -23,5 +23,5 @@ dist() {
   echo $OUTPUT_VERSION > ndk/ONDK_VERSION
   mv ndk "ondk-${OUTPUT_VERSION}"
   mkdir dist
-  tar zcf "dist/ondk-${OUTPUT_VERSION}-${OS}.tar.gz" "ondk-${OUTPUT_VERSION}"
+  tar c "ondk-${OUTPUT_VERSION}" | xz --x86 --lzma2 > "dist/ondk-${OUTPUT_VERSION}-${OS}.tar.xz"
 }
