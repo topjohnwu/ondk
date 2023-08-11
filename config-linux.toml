@@ -5,7 +5,6 @@ thin-lto = true
 targets = "AArch64;ARM;X86"
 experimental-targets = ""
 link-shared = true
-version-suffix = ""
 clang = true
 download-ci-llvm = false
 
