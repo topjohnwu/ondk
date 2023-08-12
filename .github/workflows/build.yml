@@ -3,7 +3,7 @@ name: ondk build
 on:
   workflow_dispatch:
   release:
-    types: [created]
+    types: [published]
 
 jobs:
   linux:
