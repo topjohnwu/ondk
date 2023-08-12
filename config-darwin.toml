@@ -23,6 +23,4 @@ channel = "nightly"
 lld = true
 llvm-tools = true
 jemalloc = true
-
-# Cannot enable: https://github.com/rust-lang/rust/issues/110296
-# lto = "thin"
+lto = "thin"

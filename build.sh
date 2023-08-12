@@ -96,52 +96,12 @@ ndk() {
   cd ../..
 }
 
-universal() {
-  cp -af out.x86 out
-  cp -an out.arm/. out/. || true
-
-  # Merge all Mach-O files as universal binary and adhoc codesign
-  find out -type f -exec sh -c "file {} | grep -q Mach-O" \; -print0 | \
-  while IFS= read -r -d '' o; do
-    local a="${o/out/out.x86}"
-    local b="${o/out/out.arm}"
-    if [ -f "$a" -a -f "$b" ]; then
-      lipo -create -output "$o" "$a" "$b"
-    fi
-    codesign -s - "$o"
-  done
-}
-
-clone
-
-if [ -n "$GITHUB_ACTION" -a $OS = "darwin" -a $ARCH = "aarch64" ]; then
-  if [ ! -f tmp/stage-1.tar.gz ]; then
-    echo '! Missing stage 1 artifacts'
-    exit 1
-  fi
-  tar zxf tmp/stage-1.tar.gz
-  mv out out.x86
-  # FIXME: For some unknown reason, Mach-O larger than 8MB will always be corrupted
-  cp -af rust/build/x86_64-apple-darwin/llvm/lib/*.dylib \
-    rust/build/x86_64-apple-darwin/llvm/build/lib
-  cp -af rust/build/x86_64-apple-darwin/llvm/bin/. \
-    rust/build/x86_64-apple-darwin/llvm/build/bin
+if [ -z "$DIST_ONLY" ]; then
+  clone
+  build
 fi
 
-build
-
-if [ -n "$GITHUB_ACTION" -a $OS = "darwin" ]; then
-  if [ $ARCH = "x86_64" ]; then
-    # Pack up first stage artifacts
-    mkdir tmp
-    tar zcf tmp/stage-1.tar.gz rust/build/$TRIPLE out
-    # Exit early
-    exit 0
-  else
-    mv out out.arm
-    universal
-  fi
+if [ -z "$SKIP_DIST" ]; then
+  ndk
+  dist
 fi
-
-ndk
-dist

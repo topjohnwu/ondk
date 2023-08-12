@@ -2,9 +2,8 @@ name: ondk build
 
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - "*"
+  release:
+    types: [created]
 
 jobs:
   linux:
@@ -23,20 +22,20 @@ jobs:
           python-version: "3.x"
 
       - name: Build toolchain
-        run: ./build.sh x86_64
+        run: ./build.sh
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v3
         if: ${{ github.event_name == 'workflow_dispatch' }}
         with:
           name: ondk-linux
-          path: dist/*.tar.gz
+          path: dist/*.tar.xz
 
       - name: Upload release assets
         uses: softprops/action-gh-release@v1
-        if: ${{ github.event_name == 'push' }}
+        if: ${{ github.event_name == 'release' }}
         with:
-          files: dist/*.tar.gz
+          files: dist/*.tar.xz
 
   windows:
     name: Build for Windows
@@ -69,17 +68,18 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch' }}
         with:
           name: ondk-windows
-          path: C:\ondk\dist\*.tar.gz
+          path: C:\ondk\dist\*.tar.xz
 
       - name: Upload release assets
         uses: softprops/action-gh-release@v1
-        if: ${{ github.event_name == 'push' }}
+        if: ${{ github.event_name == 'release' }}
         with:
-          files: C:/ondk/dist/*.tar.gz
+          files: C:/ondk/dist/*.tar.xz
 
-  macos-stage-1:
-    name: Build for macOS (stage 1)
+  macos-x86:
+    name: Build for macOS
     runs-on: macos-latest
+    if: ${{ github.event_name == 'workflow_dispatch' }}
 
     steps:
       - name: Check out
@@ -93,54 +93,45 @@ jobs:
           python-version: "3.x"
 
       - name: Build toolchain
-        run: ./build.sh x86_64
-
-      - name: Upload stage 1 artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: macos-stage-1
-          path: tmp/stage-1.tar.gz
-
-  macos-stage-2:
-    name: Build for macOS (stage 2)
-    needs: macos-stage-1
-    runs-on: macos-latest
-
-    steps:
-      - name: Check out
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 1
-
-      - name: Set up Python 3
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.x"
-
-      - name: Download stage 1 artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: macos-stage-1
-          path: tmp
-
-      - name: Build toolchain
-        run: ./build.sh aarch64
+        run: ./build.sh
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v3
-        if: ${{ github.event_name == 'workflow_dispatch' }}
         with:
           name: ondk-macos
-          path: dist/*.tar.gz
+          path: dist/*.tar.xz
+
+  macos-universal:
+    name: Build for macOS (Universal)
+    runs-on: macos-latest
+    if: ${{ github.event_name == 'release' }}
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python 3
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+
+      - name: Build toolchain
+        run: ./build.sh
+        env:
+          SKIP_DIST: 1
+
+      - name: Download arm64 artifact
+        uses: robinraju/release-downloader@v1.8
+        with:
+          tag: ${{ github.event.release.tag_name }}
+          fileName: ondk-macos-arm64.tar.gz
+
+      - name: Build ONDK
+        run: ./dist-macos.sh
 
       - name: Upload release assets
         uses: softprops/action-gh-release@v1
-        if: ${{ github.event_name == 'push' }}
         with:
-          files: dist/*.tar.gz
-
-      - name: Remove stage 1 artifact
-        uses: geekyeggo/delete-artifact@v2
-        with:
-          name: macos-stage-1
-          failOnError: false
+          files: dist/*.tar.xz
