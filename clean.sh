@@ -5,4 +5,6 @@
 
 set -e
 
-rm -rf rust out out.arm out.x86 android-ndk-*.zip ndk ondk-* dist tmp mingw.7z mingw64
+rm -rf rust llvm-project llvm_android toolchain-utils\
+  out out.arm out.x86 ndk tmp mingw64 \
+  android-ndk-*.zip ondk-* dist mingw.7z

@@ -19,6 +19,7 @@ OS='windows'
 NDK_DIRNAME='windows-x86_64'
 TRIPLE='x86_64-pc-windows-gnu'
 DYN_EXT='dll'
+PYTHON_CMD='python'
 
 clean_storage() {
   # Clean up storage to fit in all our build output
@@ -92,8 +93,10 @@ ndk() {
 
   # Now that clang is replaced, move files to the correct location
   local NEW_NDK_RES=$($LLVM_DIR/bin/clang -print-resource-dir)
-  mkdir -p $(dirname $NEW_NDK_RES)
-  mv $NDK_RES $NEW_NDK_RES
+  if [ $NEW_NDK_RES != $NDK_RES ]; then
+    mkdir -p $(dirname $NEW_NDK_RES)
+    mv $NDK_RES $NEW_NDK_RES
+  fi
   cd ../..
 }
 

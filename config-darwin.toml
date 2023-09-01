@@ -24,3 +24,9 @@ lld = true
 llvm-tools = true
 jemalloc = true
 lto = "thin"
+
+[target.aarch64-apple-darwin]
+llvm-has-rust-patches = false
+
+[target.x86_64-apple-darwin]
+llvm-has-rust-patches = false

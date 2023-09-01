@@ -4,3 +4,6 @@
 /tmp
 /ondk-*
 /*.zip
+/llvm-project
+/llvm_android
+/toolchain-utils

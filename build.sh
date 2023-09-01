@@ -60,11 +60,13 @@ build() {
 
 ndk() {
   local NDK_ZIP="android-ndk-${NDK_VERSION}-${OS}.zip"
+  local NDK_EXTRACT="android-ndk-${NDK_DIR_VERSION}"
 
   # Download and extract
   [ -f $NDK_ZIP ] || curl -O -L "https://dl.google.com/android/repository/$NDK_ZIP"
+  rm -rf $NDK_EXTRACT
   unzip -q $NDK_ZIP
-  mv "android-ndk-${NDK_VERSION}" ndk
+  mv $NDK_EXTRACT ndk
 
   # Copy the whole output folder into ndk
   cp -af out ndk/toolchains/rust
@@ -83,15 +85,16 @@ ndk() {
   # Replace files with those from the rust toolchain
   cd llvm.dir/bin
   ln -sf ../../rust/llvm-bin/* .
-  rm clang-14
-  cd ../lib64
+  rm clang-17
+  cd ../lib
+  rm -f libclang-cpp.so.17 libLLVM-17.so libLTO.so.17 libRemarks.so.17
   ln -sf ../../rust/lib/*.$DYN_EXT* .
-  rm -f libclang.so.13 libclang-cpp.so.14git libLLVM-14git.so libLTO.so.14git libRemarks.so.14git
   cd ../..
 
   # Now that clang is replaced, move files to the correct location
   mkdir -p $(dirname $(llvm.dir/bin/clang -print-resource-dir))
   mv $NDK_RES $(llvm.dir/bin/clang -print-resource-dir)
+  rm -rf llvm.dir/lib/clang
   ln -s ../../rust/lib/clang llvm.dir/lib/clang
   cd ../..
 }

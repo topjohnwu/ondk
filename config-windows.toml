@@ -26,3 +26,6 @@ llvm-tools = true
 
 [dist]
 include-mingw-linker = false
+
+[target.x86_64-pc-windows-gnu]
+llvm-has-rust-patches = false

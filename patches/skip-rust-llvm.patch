@@ -1,0 +1,12 @@
+diff --git a/.gitmodules b/.gitmodules
+index a13a2f5e..73ecaa40 100644
+--- a/.gitmodules
++++ b/.gitmodules
+@@ -35,6 +35,7 @@
+ 	url = https://github.com/rust-lang/llvm-project.git
+ 	branch = rustc/17.0-2023-07-29
+ 	shallow = true
++	update = none
+ [submodule "src/doc/embedded-book"]
+ 	path = src/doc/embedded-book
+ 	url = https://github.com/rust-embedded/book.git
