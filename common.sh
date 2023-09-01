@@ -53,6 +53,17 @@ clone() {
   mv llvm-project rust/src/llvm-project
 }
 
+dl_ndk() {
+  local NDK_ZIP="android-ndk-${NDK_VERSION}-${OS}.zip"
+  local NDK_EXTRACT="android-ndk-${NDK_DIR_VERSION}"
+
+  # Download and extract
+  [ -f $NDK_ZIP ] || curl -O -L "https://dl.google.com/android/repository/$NDK_ZIP"
+  rm -rf $NDK_EXTRACT
+  unzip -q $NDK_ZIP
+  mv $NDK_EXTRACT ndk
+}
+
 dist() {
   echo $OUTPUT_VERSION > ndk/ONDK_VERSION
   mv ndk "ondk-${OUTPUT_VERSION}"

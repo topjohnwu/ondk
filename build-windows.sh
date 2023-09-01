@@ -64,12 +64,7 @@ build() {
 }
 
 ndk() {
-  local NDK_ZIP="android-ndk-${NDK_VERSION}-${OS}.zip"
-
-  # Download and extract
-  [ -f $NDK_ZIP ] || curl -O -L "https://dl.google.com/android/repository/$NDK_ZIP"
-  unzip -q $NDK_ZIP
-  mv "android-ndk-${NDK_VERSION}" ndk
+  dl_ndk
 
   # Copy the whole output folder into ndk
   cp -af out ndk/toolchains/rust || true
