@@ -1,10 +1,10 @@
 # Copyright 2022-2023 Google LLC.
 # SPDX-License-Identifier: Apache-2.0
 
-RUST_VERSION='2f5df8a94bb3c5fae4e3fcbfc8ef20f1f976cb19'
+RUST_VERSION='1.73.0'
 
-NDK_VERSION='r26-rc1'
-NDK_DIR_VERSION='r26-beta2'
+NDK_VERSION='r26'
+NDK_DIR_VERSION='r26'
 
 # These revisions are obtained from the NDK's LLVM manifest.xml
 # Update in sync with the NDK package
@@ -13,7 +13,7 @@ LLVM_SVN='487747'
 LLVM_ANDROID_VERSION='8443a75fcd5c80245b194f6510b98a11098fe7fe'
 TOOLCHAIN_UTILS_VERSION='584b8e46d146a2bcfeffd64448a2d8e92904168d'
 
-OUTPUT_VERSION='r26.0'
+OUTPUT_VERSION='r26.1'
 
 PYTHON_CMD='python3'
 
@@ -29,12 +29,19 @@ git_clone_sha() {
   cd ../
 }
 
+git_clone_branch() {
+  git clone --single-branch --depth 1 --branch $2 $1
+}
+
 clone() {
-  git_clone_sha https://github.com/rust-lang/rust $RUST_VERSION
+  git_clone_branch https://github.com/rust-lang/rust $RUST_VERSION
   cd rust
   for p in ../patches/*.patch; do
     patch -p1 < $p
   done
+  # Skip rust llvm
+  sed 's:\[submodule "src/llvm-project"\]:&\n\tupdate = none:' .gitmodules > .gitmodules.p
+  mv .gitmodules.p .gitmodules
   git submodule update --init --depth=1
   cd ../
 
