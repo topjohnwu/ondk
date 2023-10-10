@@ -7,7 +7,7 @@ index e6d27757..6aa7d06e 100644
                  is_optional_tool: false,
                  source_type: SourceType::Submodule,
 -                extra_features: Vec::new(),
-+                extra_features: vec!["vendored-openssl".to_string()],
++                extra_features: vec!["all-static".to_string()],
                  allow_features: "",
              })
              .expect("expected to build -- essential tool");
