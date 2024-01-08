@@ -1,4 +1,4 @@
-changelog-seen = 2
+change-id = 116881
 
 [llvm]
 thin-lto = true
@@ -13,6 +13,7 @@ docs = false
 submodules = false
 extended = true
 tools = ["cargo", "src", "clippy", "rust-analyzer", "rustfmt"]
+cargo-native-static = true
 
 [install]
 prefix = "../out"
