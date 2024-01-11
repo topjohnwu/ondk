@@ -27,10 +27,8 @@ if [ $OS = "darwin" ]; then
   NATIVE_TRIPLE="${NATIVE_ARCH}-apple-darwin"
   DYN_EXT='dylib'
 
-  if [ $ARCH = "aarch64" ]; then
-    # Apple Silicon uses 16k pages
-    export JEMALLOC_SYS_WITH_LG_PAGE=14
-  fi
+  # Hardcode to 16k page to support both x64 and arm64
+  export JEMALLOC_SYS_WITH_LG_PAGE=14
 
   command -v ninja >/dev/null || brew install ninja
 else

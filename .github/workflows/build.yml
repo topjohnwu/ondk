@@ -76,10 +76,9 @@ jobs:
         with:
           files: C:/ondk/dist/*.tar.xz
 
-  macos-x86:
-    name: Build for macOS
-    runs-on: macos-latest
-    if: ${{ github.event_name == 'workflow_dispatch' }}
+  macos-x64:
+    name: Build for macOS (x64)
+    runs-on: macos-13
 
     steps:
       - name: Check out
@@ -93,18 +92,24 @@ jobs:
           python-version: "3.x"
 
       - name: Build toolchain
-        run: ./build.sh
+        env:
+          SKIP_DIST: 1
+        run: |
+          ./build.sh x86_64
+          mkdir tmp
+          tar c rust/build | xz --x86 --lzma2 > tmp/build.tar.xz
+          tar c out | xz --x86 --lzma2 > tmp/out.tar.xz
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v3
         with:
-          name: ondk-macos
-          path: dist/*.tar.xz
+          name: macos-x64
+          path: tmp/*.tar.xz
 
-  macos-universal:
-    name: Build for macOS (Universal)
-    runs-on: macos-latest
-    if: ${{ github.event_name == 'release' }}
+  macos-arm64:
+    name: Build for macOS (arm64)
+    runs-on: macos-13
+    needs: macos-x64
 
     steps:
       - name: Check out
@@ -117,21 +122,35 @@ jobs:
         with:
           python-version: "3.x"
 
+      - name: Download x64 artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: macos-x64
+          path: tmp
+
       - name: Build toolchain
-        run: ./build.sh
         env:
           SKIP_DIST: 1
-
-      - name: Download arm64 artifact
-        uses: robinraju/release-downloader@v1.8
-        with:
-          tag: ${{ github.event.release.tag_name }}
-          fileName: ondk-macos-arm64.tar.gz
+        run: ./build.sh aarch64
 
       - name: Build ONDK
         run: ./dist-macos.sh
 
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v3
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        with:
+          name: ondk-macos
+          path: dist/*.tar.xz
+
       - name: Upload release assets
         uses: softprops/action-gh-release@v1
+        if: ${{ github.event_name == 'release' }}
         with:
           files: dist/*.tar.xz
+
+      # - name: Remove x64 artifact
+      #   uses: geekyeggo/delete-artifact@v2
+      #   with:
+      #     name: macos-x64
+      #     failOnError: false

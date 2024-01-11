@@ -4,13 +4,13 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # This script is for generating universal binaries
-# The arm64 output should be archived to "ondk-macos-arm64.tar.gz"
+# The arm64 output should be archived to "tmp/out.tar.xz"
 # The x86_64 output should be placed in the folder "out"
 
 set -e
 
 mv out out.x86
-tar zxf ondk-macos-arm64.tar.gz
+xz -d < tmp/out.tar.xz | tar x
 mv out out.arm
 
 cp -af out.x86 out

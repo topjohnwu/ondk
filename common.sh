@@ -58,6 +58,11 @@ clone() {
   # Move the NDK LLVM into Rust's source
   rm -rf rust/src/llvm-project
   mv llvm-project rust/src/llvm-project
+
+  # Extract first stage build artifacts if exists
+  if [ -f tmp/build.tar.xz ]; then
+    xz -d < tmp/build.tar.xz | tar x
+  fi
 }
 
 dl_ndk() {
