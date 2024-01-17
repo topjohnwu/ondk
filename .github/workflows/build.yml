@@ -149,8 +149,8 @@ jobs:
         with:
           files: dist/*.tar.xz
 
-      # - name: Remove x64 artifact
-      #   uses: geekyeggo/delete-artifact@v2
-      #   with:
-      #     name: macos-x64
-      #     failOnError: false
+      - name: Remove x64 artifact
+        uses: geekyeggo/delete-artifact@v2
+        with:
+          name: macos-x64
+          failOnError: false

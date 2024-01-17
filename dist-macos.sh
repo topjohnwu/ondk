@@ -4,14 +4,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # This script is for generating universal binaries
-# The arm64 output should be archived to "tmp/out.tar.xz"
-# The x86_64 output should be placed in the folder "out"
+# The x86_64 output should be archived to "tmp/out.tar.xz"
+# The arm64 output should be placed in the folder "out"
 
 set -e
 
-mv out out.x86
-xz -d < tmp/out.tar.xz | tar x
 mv out out.arm
+xz -d < tmp/out.tar.xz | tar x
+mv out out.x86
 
 cp -af out.x86 out
 cp -an out.arm/. out/. || true
