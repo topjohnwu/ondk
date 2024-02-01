@@ -28,7 +28,7 @@ if [ $OS = "darwin" ]; then
   DYN_EXT='dylib'
 
   # Hardcode to 16k page to support both x64 and arm64
-  export JEMALLOC_SYS_WITH_LG_PAGE=14
+  # export JEMALLOC_SYS_WITH_LG_PAGE=14
 
   command -v ninja >/dev/null || brew install ninja
 else

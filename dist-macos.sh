@@ -4,23 +4,22 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # This script is for generating universal binaries
-# The x86_64 output should be archived to "tmp/out.tar.xz"
-# The arm64 output should be placed in the folder "out"
 
 set -e
 
-mv out out.arm
-xz -d < tmp/out.tar.xz | tar x
-mv out out.x86
+xz -d < tmp/out.x64.tar.xz | tar x
+mv out out.x64
+xz -d < tmp/out.arm64.tar.xz | tar x
+mv out out.arm64
 
-cp -af out.x86 out
-cp -an out.arm/. out/. || true
+cp -af out.x64 out
+cp -an out.arm64/. out/. || true
 
 # Merge all Mach-O files as universal binary and adhoc codesign
 find out -type f -exec sh -c "file {} | grep -q Mach-O" \; -print0 | \
 while IFS= read -r -d '' o; do
-  a="${o/out/out.x86}"
-  b="${o/out/out.arm}"
+  a="${o/out/out.x64}"
+  b="${o/out/out.arm64}"
   if [ -f "$a" -a -f "$b" ]; then
       lipo -create -output "$o" "$a" "$b"
   fi
