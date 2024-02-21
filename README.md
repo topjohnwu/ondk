@@ -64,7 +64,7 @@ P.S. I strongly recommend checking out [min-sized-rust](https://github.com/johnt
 
 ## License
 
-    Copyright 2022 Google LLC
+    Copyright 2022-2024 Google LLC
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
