@@ -37,8 +37,10 @@ else
   NATIVE_TRIPLE="${NATIVE_ARCH}-unknown-linux-gnu"
   DYN_EXT='so'
 
-  command -v ninja >/dev/null || sudo apt-get install ninja-build
-  command -v lld >/dev/null || sudo apt-get install lld
+  command -v cmake >/dev/null || sudo apt-get -y install cmake
+  command -v ninja >/dev/null || sudo apt-get -y install ninja-build
+  command -v clang-16 >/dev/null || sudo apt-get -y install clang-16
+  command -v lld-16 >/dev/null || sudo apt-get -y install lld-16
 fi
 
 build() {

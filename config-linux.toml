@@ -35,6 +35,6 @@ lto = "thin"
 
 [target.x86_64-unknown-linux-gnu]
 llvm-has-rust-patches = false
-cc = "clang-14"
-cxx = "clang++-14"
-linker = "clang-14"
+cc = "clang-16"
+cxx = "clang++-16"
+linker = "clang-16"
