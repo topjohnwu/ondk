@@ -1,4 +1,4 @@
-change-id = 116881
+change-id = 102579
 
 [llvm]
 thin-lto = true
@@ -12,7 +12,14 @@ download-ci-llvm = false
 docs = false
 submodules = false
 extended = true
-tools = ["cargo", "src", "clippy", "rust-analyzer", "rustfmt"]
+tools = [
+    "cargo",
+    "src",
+    "clippy",
+    "rust-analyzer",
+    "rustfmt",
+    "rust-analyzer-proc-macro-srv",
+]
 cargo-native-static = true
 
 [install]
@@ -23,7 +30,7 @@ sysconfdir = "etc"
 channel = "nightly"
 lld = true
 llvm-tools = true
-use-lld = true
+use-lld = "self-contained"
 lto = "thin"
 
 [target.x86_64-unknown-linux-gnu]

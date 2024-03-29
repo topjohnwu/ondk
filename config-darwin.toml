@@ -1,4 +1,4 @@
-change-id = 116881
+change-id = 102579
 
 [llvm]
 thin-lto = true
@@ -12,7 +12,14 @@ download-ci-llvm = false
 docs = false
 submodules = false
 extended = true
-tools = ["cargo", "src", "clippy", "rust-analyzer", "rustfmt"]
+tools = [
+    "cargo",
+    "src",
+    "clippy",
+    "rust-analyzer",
+    "rustfmt",
+    "rust-analyzer-proc-macro-srv",
+]
 cargo-native-static = true
 
 [install]
