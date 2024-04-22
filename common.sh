@@ -1,19 +1,19 @@
 # Copyright 2022-2024 Google LLC.
 # SPDX-License-Identifier: Apache-2.0
 
-RUST_VERSION='1.77.0'
+RUST_VERSION='1.77.2'
 
 NDK_VERSION='r26c'
 NDK_DIR_VERSION='r26c'
 
 # These revisions are obtained from the NDK's LLVM manifest.xml and clang_source_info.md
 # Update in sync with the NDK package
-LLVM_VERSION='c4c5e79dd4b4c78eee7cffd9b0d7394b5bedcf12'
-LLVM_SVN='487747'
-LLVM_ANDROID_VERSION='0f058ab00ec6c9b8b39956c1393bcc405a5498d3'
-TOOLCHAIN_UTILS_VERSION='584b8e46d146a2bcfeffd64448a2d8e92904168d'
+LLVM_VERSION='3c92011b600bdf70424e2547594dd461fe411a41'
+LLVM_SVN='522817'
+LLVM_ANDROID_VERSION='ac5b80f23decc96c1c188f6361fc13dfe72b62c5'
+TOOLCHAIN_UTILS_VERSION='c688b0e8f5df2c2d16b72ec23beebd2f89c18658'
 
-OUTPUT_VERSION='r26.4'
+OUTPUT_VERSION='r27.0'
 
 PYTHON_CMD='python3'
 
@@ -36,9 +36,9 @@ git_clone_branch() {
 clone() {
   git_clone_branch https://github.com/rust-lang/rust $RUST_VERSION
   cd rust
-  for p in ../patches/*.patch; do
-    patch -p1 < $p
-  done
+  # for p in ../patches/*.patch; do
+  #   patch -p1 < $p
+  # done
   # Skip rust llvm
   sed 's:\[submodule "src/llvm-project"\]:&\n\tupdate = none:' .gitmodules > .gitmodules.p
   mv .gitmodules.p .gitmodules
