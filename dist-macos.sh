@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2022-2023 Google LLC.
+# Copyright 2022-2024 Google LLC.
 # SPDX-License-Identifier: Apache-2.0
 
 # This script is for generating universal binaries
@@ -26,4 +26,4 @@ while IFS= read -r -d '' o; do
   codesign -s - "$o"
 done
 
-DIST_ONLY=1 ./build.sh
+SKIP_BUILD=1 ./build.sh

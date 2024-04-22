@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2022-2023 Google LLC.
+# Copyright 2022-2024 Google LLC.
 # SPDX-License-Identifier: Apache-2.0
 
 set -e
@@ -92,7 +92,7 @@ ndk() {
   cd ../..
 }
 
-if [ -z "$DIST_ONLY" ]; then
+if [ -z "$SKIP_BUILD" ]; then
   clone
   build
 fi
