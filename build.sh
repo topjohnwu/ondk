@@ -51,7 +51,6 @@ build() {
   cd out
   find . -name '*.old' -delete
   cp -af ../rust/build/$TRIPLE/llvm/bin llvm-bin
-  cp -af $(../rust/build/$NATIVE_TRIPLE/llvm/bin/clang -print-resource-dir)/include clang-include
   cp -af lib/rustlib/$TRIPLE/bin/rust-lld llvm-bin/lld
   ln -sf lld llvm-bin/ld
   find ../rust/build/$TRIPLE/llvm/lib -name "*.${DYN_EXT}*" -exec cp -an {} lib \;
@@ -70,26 +69,13 @@ ndk() {
   mv llvm/prebuilt/$NDK_DIRNAME llvm.dir
   ln -s ../../llvm.dir llvm/prebuilt/$NDK_DIRNAME
 
-  # Replace headers
-  local NDK_RES=$(llvm.dir/bin/clang -print-resource-dir)
-  rm -rf $NDK_RES/include
-  mv rust/clang-include $NDK_RES/include
-
   # Replace files with those from the rust toolchain
   cd llvm.dir/bin
   ln -sf ../../rust/llvm-bin/* .
-  rm clang-17
   cd ../lib
-  rm -f libclang-cpp.so.17 libLLVM-17.so libLTO.so.17 libRemarks.so.17
   ln -sf ../../rust/lib/*.$DYN_EXT* .
-  cd ../..
 
-  # Now that clang is replaced, move files to the correct location
-  mkdir -p $(dirname $(llvm.dir/bin/clang -print-resource-dir))
-  mv $NDK_RES $(llvm.dir/bin/clang -print-resource-dir)
-  rm -rf llvm.dir/lib/clang
-  ln -s ../../rust/lib/clang llvm.dir/lib/clang
-  cd ../..
+  cd ../../../..
 }
 
 if [ -z "$SKIP_BUILD" ]; then

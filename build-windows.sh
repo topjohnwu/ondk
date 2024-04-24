@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2022-2023 Google LLC.
+# Copyright 2022-2024 Google LLC.
 # SPDX-License-Identifier: Apache-2.0
 
 set -e
@@ -58,7 +58,6 @@ build() {
   find . -name '*.old' -delete
   cp -af ../rust/build/$TRIPLE/llvm/bin llvm-bin || true
   cp -an ../rust/build/$TRIPLE/llvm/bin/. llvm-bin/.
-  cp -af $(../rust/build/$TRIPLE/llvm/bin/clang -print-resource-dir)/include clang-include
   cp -af lib/rustlib/$TRIPLE/bin/rust-lld.exe llvm-bin/lld.exe
   cd ..
 }
@@ -74,11 +73,6 @@ ndk() {
 
   local LLVM_DIR=llvm/prebuilt/$NDK_DIRNAME
 
-  # Replace headers
-  local NDK_RES=$($LLVM_DIR/bin/clang -print-resource-dir)
-  rm -rf $NDK_RES/include
-  mv rust/clang-include $NDK_RES/include
-
   # Replace files with those from the rust toolchain
   replace_cp rust/llvm-bin $LLVM_DIR/bin
   cp -af rust/llvm-bin/lld.exe $LLVM_DIR/bin/lld.exe
@@ -86,12 +80,6 @@ ndk() {
   ln -sf lld.exe $LLVM_DIR/bin/ld.lld.exe
   rm -rf rust/llvm-bin
 
-  # Now that clang is replaced, move files to the correct location
-  local NEW_NDK_RES=$($LLVM_DIR/bin/clang -print-resource-dir)
-  if [ $NEW_NDK_RES != $NDK_RES ]; then
-    mkdir -p $(dirname $NEW_NDK_RES)
-    mv $NDK_RES $NEW_NDK_RES
-  fi
   cd ../..
 }
 

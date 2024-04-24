@@ -3,8 +3,8 @@
 
 RUST_VERSION='1.77.2'
 
-NDK_VERSION='r26c'
-NDK_DIR_VERSION='r26c'
+NDK_VERSION='r27-beta1'
+NDK_DIR_VERSION=$NDK_VERSION
 
 # These revisions are obtained from the NDK's LLVM manifest.xml and clang_source_info.md
 # Update in sync with the NDK package
@@ -58,11 +58,6 @@ clone() {
   # Move the NDK LLVM into Rust's source
   rm -rf rust/src/llvm-project
   mv llvm-project rust/src/llvm-project
-
-  # Extract first stage build artifacts if exists
-  if [ -f tmp/build.tar.xz ]; then
-    xz -d < tmp/build.tar.xz | tar x
-  fi
 }
 
 dl_ndk() {
