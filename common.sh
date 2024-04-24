@@ -77,3 +77,42 @@ dist() {
   mkdir dist
   tar c "ondk-${OUTPUT_VERSION}" | xz --x86 --lzma2 > "dist/ondk-${OUTPUT_VERSION}-${OS}.tar.xz"
 }
+
+run_cmd() {
+  case $1 in
+    clone)
+      rm -rf rust llvm-project llvm_android toolchain-utils
+      clone
+      ;;
+    build)
+      rm -rf out
+      build
+      ;;
+    ndk)
+      rm -rf ndk
+      ndk
+      ;;
+    dist)
+      rm -rf dist ondk-*
+      dist
+      ;;
+    *)
+      echo "Unknown action \"$1\""
+      echo "./build.sh clone/build/ndk/dist"
+      exit 1
+      ;;
+  esac
+}
+
+parse_args() {
+  if [ $# -eq 0 ]; then
+    run_cmd clone
+    run_cmd build
+    run_cmd ndk
+    run_cmd dist
+  else
+    for arg in $@; do
+      run_cmd $arg
+    done
+  fi
+}

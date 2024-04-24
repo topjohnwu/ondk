@@ -92,10 +92,8 @@ jobs:
           python-version: "3.x"
 
       - name: Build toolchain
-        env:
-          SKIP_DIST: 1
         run: |
-          ./build.sh
+          ./build.sh clone build
           mkdir tmp
           tar c out | xz --x86 --lzma2 > tmp/out.x64.tar.xz
 
@@ -124,7 +122,7 @@ jobs:
         env:
           SKIP_DIST: 1
         run: |
-          ./build.sh
+          ./build.sh clone build
           mkdir tmp
           tar c out | xz > tmp/out.arm64.tar.xz
 

@@ -14,11 +14,9 @@ if [ $NATIVE_ARCH = "arm64" ]; then
   NATIVE_ARCH='aarch64'
 fi
 
-if [ -z $1 ]; then
+if [ -z $ARCH ]; then
   # Build the native architecture by default
   ARCH=$NATIVE_ARCH
-else
-  ARCH=$1
 fi
 
 if [ $OS = "darwin" ]; then
@@ -87,12 +85,5 @@ ndk() {
   cd ../../../..
 }
 
-if [ -z "$SKIP_BUILD" ]; then
-  clone
-  build
-fi
 
-if [ -z "$SKIP_DIST" ]; then
-  ndk
-  dist
-fi
+parse_args $@

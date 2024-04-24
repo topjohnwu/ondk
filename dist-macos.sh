@@ -26,4 +26,4 @@ while IFS= read -r -d '' o; do
   codesign -s - "$o"
 done
 
-SKIP_BUILD=1 ./build.sh
+./build.sh ndk dist

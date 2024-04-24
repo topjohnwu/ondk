@@ -20,6 +20,7 @@ NDK_DIRNAME='windows-x86_64'
 TRIPLE='x86_64-pc-windows-gnu'
 DYN_EXT='dll'
 PYTHON_CMD='python'
+MINGW_URL='https://github.com/niXman/mingw-builds-binaries/releases/download/13.1.0-rt_v11-rev1/x86_64-13.1.0-release-win32-seh-ucrt-rt_v11-rev1.7z'
 
 clean_storage() {
   # Clean up storage to fit in all our build output
@@ -81,6 +82,11 @@ ndk() {
   rm -rf rust/llvm-bin
 
   cd ../..
+
+  # Bundle the entire mingw toolchain
+  curl -o mingw.7z -OL "$MINGW_URL"
+  7z x mingw.7z
+  cp -af mingw64/. ndk/toolchains/rust/.
 }
 
 export PATH='/c/Program Files/Git/cmd':$PATH
@@ -89,13 +95,4 @@ if [ -n "$GITHUB_ACTION" ]; then
   clean_storage
 fi
 
-clone
-build
-ndk
-
-# Bundle the entire mingw toolchain
-curl -o mingw.7z -O -L "https://github.com/niXman/mingw-builds-binaries/releases/download/13.1.0-rt_v11-rev1/x86_64-13.1.0-release-win32-seh-ucrt-rt_v11-rev1.7z"
-7z x mingw.7z
-cp -af mingw64/. ndk/toolchains/rust/.
-
-dist
+parse_args $@
