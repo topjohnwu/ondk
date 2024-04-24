@@ -26,6 +26,7 @@ if [ $OS = "darwin" ]; then
   TRIPLE="${ARCH}-apple-darwin"
   NATIVE_TRIPLE="${NATIVE_ARCH}-apple-darwin"
   DYN_EXT='dylib'
+  EXE_FMT='Mach-O'
 
   # Hardcode to 16k page to support both x64 and arm64
   # export JEMALLOC_SYS_WITH_LG_PAGE=14
@@ -36,6 +37,7 @@ else
   TRIPLE="${ARCH}-unknown-linux-gnu"
   NATIVE_TRIPLE="${NATIVE_ARCH}-unknown-linux-gnu"
   DYN_EXT='so'
+  EXE_FMT='ELF'
 
   command -v cmake >/dev/null || sudo apt-get -y install cmake
   command -v ninja >/dev/null || sudo apt-get -y install ninja-build
@@ -54,6 +56,11 @@ build() {
   cp -af lib/rustlib/$TRIPLE/bin/rust-lld llvm-bin/lld
   ln -sf lld llvm-bin/ld
   find ../rust/build/$TRIPLE/llvm/lib -name "*.${DYN_EXT}*" -exec cp -an {} lib \;
+
+  # Strip executables
+  llvm-bin/llvm-strip -s $(find llvm-bin -type f -exec sh -c "file {} | grep -q $EXE_FMT" \; -print)
+  llvm-bin/llvm-strip -s $(find lib -maxdepth 1 -type f -exec sh -c "file {} | grep -q $EXE_FMT" \; -print)
+
   cd ..
 }
 
