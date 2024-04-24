@@ -2,11 +2,13 @@ change-id = 102579
 
 [llvm]
 thin-lto = true
-targets = "AArch64;ARM;X86"
+targets = "AArch64;ARM;X86;RISCV"
 experimental-targets = ""
 link-shared = true
 clang = true
 download-ci-llvm = false
+version-suffix = ""
+build-config = { LLVM_VERSION_SUFFIX = "" }
 
 [build]
 docs = false
@@ -33,6 +35,7 @@ lld = true
 llvm-tools = true
 jemalloc = true
 lto = "thin"
+strip = true
 
 [target.aarch64-apple-darwin]
 llvm-has-rust-patches = false

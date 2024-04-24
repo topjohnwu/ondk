@@ -2,11 +2,14 @@ change-id = 102579
 
 [llvm]
 thin-lto = true
-targets = "AArch64;ARM;X86"
+targets = "AArch64;ARM;X86;RISCV"
 experimental-targets = ""
 link-shared = true
 clang = true
 download-ci-llvm = false
+static-libstdcpp = true
+version-suffix = ""
+build-config = { LLVM_VERSION_SUFFIX = "" }
 
 [build]
 docs = false
@@ -33,6 +36,7 @@ lld = true
 llvm-tools = true
 use-lld = "self-contained"
 lto = "thin"
+strip = true
 
 [target.x86_64-unknown-linux-gnu]
 llvm-has-rust-patches = false

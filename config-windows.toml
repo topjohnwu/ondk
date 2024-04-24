@@ -1,12 +1,14 @@
 change-id = 102579
 
 [llvm]
-targets = "AArch64;ARM;X86"
+targets = "AArch64;ARM;X86;RISCV"
 experimental-targets = ""
 clang = true
 static-libstdcpp = true
 ldflags = "-s -static-libgcc -static"
 download-ci-llvm = false
+version-suffix = ""
+build-config = { LLVM_VERSION_SUFFIX = "" }
 
 [build]
 docs = false
@@ -31,6 +33,7 @@ sysconfdir = "etc"
 channel = "nightly"
 lld = true
 llvm-tools = true
+strip = true
 
 [dist]
 include-mingw-linker = false
