@@ -55,7 +55,7 @@ jobs:
           msystem: UCRT64
           update: true
           install: make diffutils tar patch unzip gzip
-          pacboy: 7zip:p python:p cmake:p gcc:p ninja:p
+          pacboy: 7zip:p python:p cmake:p gcc:p ninja:p zstd:p
 
       - name: Build toolchain
         run: |

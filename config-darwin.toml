@@ -8,7 +8,11 @@ link-shared = true
 clang = true
 download-ci-llvm = false
 version-suffix = ""
-build-config = { LLVM_VERSION_SUFFIX = "" }
+
+[llvm.build-config]
+LLVM_VERSION_SUFFIX = ""
+LLVM_ENABLE_ZSTD = "FORCE_ON"
+LLVM_USE_STATIC_ZSTD = "TRUE"
 
 [build]
 docs = false

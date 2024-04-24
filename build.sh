@@ -32,6 +32,7 @@ if [ $OS = "darwin" ]; then
   # export JEMALLOC_SYS_WITH_LG_PAGE=14
 
   command -v ninja >/dev/null || brew install ninja
+  command -v zstd >/dev/null || brew install zstd
 else
   NDK_DIRNAME='linux-x86_64'
   TRIPLE="${ARCH}-unknown-linux-gnu"
@@ -43,6 +44,7 @@ else
   command -v ninja >/dev/null || sudo apt-get -y install ninja-build
   command -v clang-16 >/dev/null || sudo apt-get -y install clang-16
   command -v lld-16 >/dev/null || sudo apt-get -y install lld-16
+  dpkg-query -W libzstd-dev >/dev/null 2>&1 || sudo apt-get -y install libzstd-dev
 fi
 
 build() {
