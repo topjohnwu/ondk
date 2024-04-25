@@ -20,7 +20,7 @@ NDK_DIRNAME='windows-x86_64'
 TRIPLE='x86_64-pc-windows-gnu'
 DYN_EXT='dll'
 PYTHON_CMD='python'
-MINGW_URL='https://github.com/niXman/mingw-builds-binaries/releases/download/13.1.0-rt_v11-rev1/x86_64-13.1.0-release-win32-seh-ucrt-rt_v11-rev1.7z'
+MINGW_URL='https://github.com/niXman/mingw-builds-binaries/releases/download/13.2.0-rt_v11-rev1/x86_64-13.2.0-release-win32-seh-ucrt-rt_v11-rev1.7z'
 
 clean_storage() {
   # Clean up storage to fit in all our build output

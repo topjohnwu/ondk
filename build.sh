@@ -40,8 +40,8 @@ else
 
   command -v cmake >/dev/null || sudo apt-get -y install cmake
   command -v ninja >/dev/null || sudo apt-get -y install ninja-build
-  command -v clang-16 >/dev/null || sudo apt-get -y install clang-16
-  command -v lld-16 >/dev/null || sudo apt-get -y install lld-16
+  command -v clang-12 >/dev/null || sudo apt-get -y install clang-12
+  command -v lld-12 >/dev/null || sudo apt-get -y install lld-12
   dpkg-query -W libzstd-dev >/dev/null 2>&1 || sudo apt-get -y install libzstd-dev
 fi
 

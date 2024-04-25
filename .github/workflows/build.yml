@@ -32,7 +32,7 @@ jobs:
           path: dist/*.tar.xz
 
       - name: Upload release assets
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         if: ${{ github.event_name == 'release' }}
         with:
           files: dist/*.tar.xz
@@ -71,7 +71,7 @@ jobs:
           path: C:\ondk\dist\*.tar.xz
 
       - name: Upload release assets
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         if: ${{ github.event_name == 'release' }}
         with:
           files: C:/ondk/dist/*.tar.xz
@@ -166,7 +166,7 @@ jobs:
           path: dist/*.tar.xz
 
       - name: Upload release assets
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         if: ${{ github.event_name == 'release' }}
         with:
           files: dist/*.tar.xz

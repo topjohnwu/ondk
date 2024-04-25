@@ -44,6 +44,6 @@ strip = true
 
 [target.x86_64-unknown-linux-gnu]
 llvm-has-rust-patches = false
-cc = "clang-16"
-cxx = "clang++-16"
-linker = "clang-16"
+cc = "clang-12"
+cxx = "clang++-12"
+linker = "clang-12"
