@@ -30,26 +30,6 @@ clean_storage() {
     "$GOROOT_1_15_X64" "$GOROOT_1_16_X64" "$GOROOT_1_17_X64" "$GOROOT_1_18_X64"
 }
 
-replace_cp() {
-  local src=$1
-  local dest=$2
-
-  for d in $dest/*; do
-    local s=$src/$(basename $d)
-    if [ -L $s ]; then
-      # It is possible that the symlink is pointing to a new file, copy it first
-      local s_real=$(realpath $s)
-      local d_real=$dest/$(basename $s_real)
-      cp -af $s_real $d_real
-      # Then create the symlink
-      local path=$(readlink $s)
-      ln -sf $path $d
-    elif [ -f $s ]; then
-      cp -af $s $d
-    fi
-  done
-}
-
 build() {
   cd rust
   python ./x.py --config '../config-windows.toml' --build $TRIPLE install
@@ -75,8 +55,8 @@ ndk() {
   local LLVM_DIR=llvm/prebuilt/$NDK_DIRNAME
 
   # Replace files with those from the rust toolchain
-  replace_cp rust/llvm-bin $LLVM_DIR/bin
-  cp -af rust/llvm-bin/lld.exe $LLVM_DIR/bin/lld.exe
+  cp -af rust/llvm-bin $LLVM_DIR/bin || true
+  cp -an rust/llvm-bin/. $LLVM_DIR/bin/.
   ln -sf lld.exe $LLVM_DIR/bin/ld.exe
   ln -sf lld.exe $LLVM_DIR/bin/ld.lld.exe
   rm -rf rust/llvm-bin
@@ -84,6 +64,7 @@ ndk() {
   cd ../..
 
   # Bundle the entire mingw toolchain
+  rm -rf mingw.7z mingw64
   curl -o mingw.7z -OL "$MINGW_URL"
   7z x mingw.7z
   cp -af mingw64/. ndk/toolchains/rust/.
