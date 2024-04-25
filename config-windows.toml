@@ -13,6 +13,7 @@ version-suffix = ""
 LLVM_VERSION_SUFFIX = ""
 LLVM_ENABLE_ZSTD = "FORCE_ON"
 LLVM_USE_STATIC_ZSTD = "TRUE"
+LLVM_USE_SYMLINKS = "TRUE"
 
 [build]
 docs = false
