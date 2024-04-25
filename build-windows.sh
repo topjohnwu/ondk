@@ -55,7 +55,7 @@ ndk() {
   local LLVM_DIR=llvm/prebuilt/$NDK_DIRNAME
 
   # Replace files with those from the rust toolchain
-  cp -af rust/llvm-bin $LLVM_DIR/bin || true
+  cp -af rust/llvm-bin/. $LLVM_DIR/bin/. || true
   cp -an rust/llvm-bin/. $LLVM_DIR/bin/.
   ln -sf lld.exe $LLVM_DIR/bin/ld.exe
   ln -sf lld.exe $LLVM_DIR/bin/ld.lld.exe
