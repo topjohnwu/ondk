@@ -60,6 +60,27 @@ clone() {
   mv llvm-project rust/src/llvm-project
 }
 
+update_dir() {
+  local src=$1
+  local dest=$2
+
+  for d in $dest/*; do
+    local s=$src/$(basename $d)
+    # Copy regular files first
+    if [ -f $s ] && [ ! -L $s ]; then
+      cp -af $s $d
+    fi
+  done
+
+  for d in $dest/*; do
+    local s=$src/$(basename $d)
+    # Then copy over symlinks
+    if [ -L $s ]; then
+      cp -af $s $d
+    fi
+  done
+}
+
 dl_ndk() {
   local NDK_ZIP="android-ndk-${NDK_VERSION}-${OS}.zip"
   local NDK_EXTRACT="android-ndk-${NDK_DIR_VERSION}"

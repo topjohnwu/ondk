@@ -72,17 +72,15 @@ ndk() {
 
   cd ndk/toolchains
 
-  # Move llvm folder to llvm.dir
-  mv llvm/prebuilt/$NDK_DIRNAME llvm.dir
-  ln -s ../../llvm.dir llvm/prebuilt/$NDK_DIRNAME
+  local LLVM_DIR=llvm/prebuilt/$NDK_DIRNAME
 
   # Replace files with those from the rust toolchain
-  cp -af rust/llvm-bin/. llvm.dir/bin
+  update_dir rust/llvm-bin $LLVM_DIR/bin
   rm -rf rust/llvm-bin
-  cd llvm.dir/lib
-  ln -sf ../../rust/lib/*.$DYN_EXT* .
+  cd $LLVM_DIR/lib
+  ln -sf ../../../../rust/lib/*.$DYN_EXT* .
 
-  cd ../../../..
+  cd ../../../../../../
 }
 
 
