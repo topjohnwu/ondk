@@ -69,6 +69,8 @@ ndk() {
   7z x mingw.7z
   rm -rf mingw64/etc mingw64/opt mingw64/share mingw64/build-info.txt
   cp -af mingw64/. ndk/toolchains/rust/.
+  cp /ucrt64/bin/libzstd.dll ndk/toolchains/llvm/prebuilt/windows-x86_64/bin/
+  cp /ucrt64/bin/libzstd.dll ndk/toolchains/rust/bin/
 }
 
 export PATH='/c/Program Files/Git/cmd':$PATH
