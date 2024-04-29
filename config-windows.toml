@@ -5,7 +5,7 @@ targets = "AArch64;ARM;X86;RISCV"
 experimental-targets = ""
 clang = true
 static-libstdcpp = true
-ldflags = "-s -static-libgcc -static"
+ldflags = "-s"
 download-ci-llvm = false
 version-suffix = ""
 
@@ -14,8 +14,6 @@ LLVM_VERSION_SUFFIX = ""
 LLVM_ENABLE_ZSTD = "FORCE_ON"
 LLVM_USE_STATIC_ZSTD = "TRUE"
 LLVM_USE_SYMLINKS = "TRUE"
-LLVM_BUILD_STATIC = "ON"
-LIBCLANG_BUILD_STATIC = "ON"
 
 [build]
 docs = false
@@ -43,7 +41,7 @@ llvm-tools = true
 strip = true
 
 [dist]
-include-mingw-linker = false
+include-mingw-linker = true
 
 [target.x86_64-pc-windows-gnu]
 llvm-has-rust-patches = false

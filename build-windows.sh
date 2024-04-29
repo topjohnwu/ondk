@@ -20,7 +20,6 @@ NDK_DIRNAME='windows-x86_64'
 TRIPLE='x86_64-pc-windows-gnu'
 DYN_EXT='dll'
 PYTHON_CMD='python'
-MINGW_URL='https://github.com/niXman/mingw-builds-binaries/releases/download/13.2.0-rt_v11-rev1/x86_64-13.2.0-release-win32-seh-ucrt-rt_v11-rev1.7z'
 
 clean_storage() {
   # Clean up storage to fit in all our build output
@@ -40,7 +39,12 @@ build() {
   cp -af ../rust/build/$TRIPLE/llvm/bin llvm-bin || true
   cp -an ../rust/build/$TRIPLE/llvm/bin/. llvm-bin/.
   cp -af lib/rustlib/$TRIPLE/bin/rust-lld.exe llvm-bin/lld.exe
+  cp -af ../rust/build/tmp/dist/lib/rustlib/. lib/rustlib/.
   cd ..
+}
+
+get_sys_dlls() {
+  ldd $1 | grep ' /ucrt64/bin/' | awk '{ print $1 }'
 }
 
 ndk() {
@@ -53,6 +57,7 @@ ndk() {
   cd ndk/toolchains
 
   local LLVM_DIR=llvm/prebuilt/$NDK_DIRNAME
+  local MINGW_DIR=rust/lib/rustlib/$TRIPLE/bin/self-contained
 
   # Replace files with those from the rust toolchain
   touch $LLVM_DIR/bin/lld.exe
@@ -61,14 +66,16 @@ ndk() {
   ln -sf lld.exe $LLVM_DIR/bin/ld.exe
   ln -sf lld.exe $LLVM_DIR/bin/ld.lld.exe
 
-  cd ../..
+  # Copy runtime dlls
+  for lib in $(get_sys_dlls $LLVM_DIR/bin/clang.exe); do
+    cp /ucrt64/bin/$lib rust/bin
+    cp /ucrt64/bin/$lib $LLVM_DIR/bin
+  done
+  for lib in $(get_sys_dlls $MINGW_DIR/ld.exe); do
+    cp /ucrt64/bin/$lib $MINGW_DIR
+  done
 
-  # Bundle the entire mingw toolchain
-  rm -rf mingw.7z mingw64
-  curl -o mingw.7z -OL "$MINGW_URL"
-  7z x mingw.7z
-  rm -rf mingw64/etc mingw64/opt mingw64/share mingw64/build-info.txt
-  cp -af mingw64/. ndk/toolchains/rust/.
+  cd ../..
 }
 
 export PATH='/c/Program Files/Git/cmd':$PATH
