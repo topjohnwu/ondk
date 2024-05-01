@@ -43,8 +43,11 @@ build() {
   cd ..
 }
 
-get_sys_dlls() {
-  ldd $1 | grep ' /ucrt64/bin/' | awk '{ print $1 }'
+cp_sys_dlls() {
+  local dir=$(dirname $1)
+  for lib in $(ldd $1 | grep ' /ucrt64/bin/' | awk '{ print $1 }'); do
+    cp /ucrt64/bin/$lib $dir
+  done
 }
 
 ndk() {
@@ -67,13 +70,9 @@ ndk() {
   ln -sf lld.exe $LLVM_DIR/bin/ld.lld.exe
 
   # Copy runtime dlls
-  for lib in $(get_sys_dlls $LLVM_DIR/bin/clang.exe); do
-    cp /ucrt64/bin/$lib rust/bin
-    cp /ucrt64/bin/$lib $LLVM_DIR/bin
-  done
-  for lib in $(get_sys_dlls $MINGW_DIR/ld.exe); do
-    cp /ucrt64/bin/$lib $MINGW_DIR
-  done
+  cp_sys_dlls $LLVM_DIR/bin/clang.exe
+  cp_sys_dlls rust/bin/rustc.exe
+  cp_sys_dlls $MINGW_DIR/ld.exe
 
   cd ../..
 }
