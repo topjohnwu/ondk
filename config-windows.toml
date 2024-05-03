@@ -1,4 +1,4 @@
-change-id = 102579
+change-id = 121754
 
 [llvm]
 targets = "AArch64;ARM;X86;RISCV"
@@ -39,6 +39,7 @@ channel = "nightly"
 lld = true
 llvm-tools = true
 strip = true
+codegen-units = 1
 
 [dist]
 include-mingw-linker = true

@@ -1,4 +1,4 @@
-change-id = 102579
+change-id = 121754
 
 [llvm]
 thin-lto = true
@@ -40,6 +40,7 @@ llvm-tools = true
 jemalloc = true
 lto = "thin"
 strip = true
+codegen-units = 1
 
 [target.aarch64-apple-darwin]
 llvm-has-rust-patches = false

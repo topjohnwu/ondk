@@ -1,4 +1,4 @@
-change-id = 102579
+change-id = 121754
 
 [llvm]
 thin-lto = true
@@ -41,6 +41,7 @@ llvm-tools = true
 use-lld = "self-contained"
 lto = "thin"
 strip = true
+codegen-units = 1
 
 [target.x86_64-unknown-linux-gnu]
 llvm-has-rust-patches = false

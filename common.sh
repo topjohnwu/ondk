@@ -1,7 +1,7 @@
 # Copyright 2022-2024 Google LLC.
 # SPDX-License-Identifier: Apache-2.0
 
-RUST_VERSION='1.77.2'
+RUST_VERSION='1.78.0'
 
 NDK_VERSION='r27-beta1'
 NDK_DIR_VERSION=$NDK_VERSION
