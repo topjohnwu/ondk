@@ -3,8 +3,6 @@
 # Copyright 2022-2024 Google LLC.
 # SPDX-License-Identifier: Apache-2.0
 
-set -e
-
 if ! uname | grep -q 'MINGW64_NT'; then
   echo 'This script should run on MSYS2 bash'
   echo

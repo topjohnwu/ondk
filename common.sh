@@ -17,6 +17,9 @@ OUTPUT_VERSION='r27.0'
 
 PYTHON_CMD='python3'
 
+set -e
+shopt -s nullglob
+
 # url sha
 git_clone_sha() {
   local dir=${1##*/}
@@ -36,9 +39,9 @@ git_clone_branch() {
 clone() {
   git_clone_branch https://github.com/rust-lang/rust $RUST_VERSION
   cd rust
-  # for p in ../patches/*.patch; do
-  #   patch -p1 < $p
-  # done
+  for p in ../patches/*.patch; do
+    patch -p1 < $p
+  done
   # Skip rust llvm
   sed 's:\[submodule "src/llvm-project"\]:&\n\tupdate = none:' .gitmodules > .gitmodules.p
   mv .gitmodules.p .gitmodules
@@ -116,6 +119,11 @@ run_cmd() {
     dist)
       rm -rf dist ondk-*
       dist
+      ;;
+    clean)
+      rm -rf rust llvm-project llvm_android toolchain-utils \
+        out out.arm out.x86 ndk tmp mingw64 \
+        android-ndk-*.zip ondk-* dist mingw.7z
       ;;
     *)
       echo "Unknown action \"$1\""
