@@ -71,6 +71,7 @@ ndk() {
   cp_sys_dlls $LLVM_DIR/bin/clang.exe
   cp_sys_dlls rust/bin/rustc.exe
   cp_sys_dlls $MINGW_DIR/ld.exe
+  cp_sys_dlls $MINGW_DIR/x86_64-w64-mingw32-gcc.exe
 
   cd ../..
 }
