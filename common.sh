@@ -93,10 +93,10 @@ dl_ndk() {
   rm -rf $NDK_EXTRACT
   unzip -q $NDK_ZIP
   mv $NDK_EXTRACT ndk
+  echo $OUTPUT_VERSION > ndk/ONDK_VERSION
 }
 
 dist() {
-  echo $OUTPUT_VERSION > ndk/ONDK_VERSION
   mv ndk "ondk-${OUTPUT_VERSION}"
   mkdir dist
   tar c "ondk-${OUTPUT_VERSION}" | xz --x86 --lzma2 > "dist/ondk-${OUTPUT_VERSION}-${OS}.tar.xz"
