@@ -13,6 +13,8 @@ version-suffix = ""
 LLVM_VERSION_SUFFIX = ""
 LLVM_ENABLE_ZSTD = "FORCE_ON"
 LLVM_USE_STATIC_ZSTD = "TRUE"
+LLVM_BINUTILS_INCDIR = "BREW_PREFIX/opt/binutils/include"
+LLVM_ENABLE_PLUGINS = "FORCE_ON"
 
 [build]
 docs = false

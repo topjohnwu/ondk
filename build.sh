@@ -29,6 +29,8 @@ if [ $OS = "darwin" ]; then
 
   command -v ninja >/dev/null || brew install ninja
   command -v zstd >/dev/null || brew install zstd
+  brew install binutils
+  sed -i '' "s|BREW_PREFIX|$(brew --prefix)|g" config-darwin.toml
 else
   NDK_DIRNAME='linux-x86_64'
   TRIPLE="${ARCH}-unknown-linux-gnu"
@@ -41,6 +43,7 @@ else
   command -v clang-12 >/dev/null || sudo apt-get -y install clang-12
   command -v lld-12 >/dev/null || sudo apt-get -y install lld-12
   dpkg-query -W libzstd-dev >/dev/null 2>&1 || sudo apt-get -y install libzstd-dev
+  sudo apt-get -y install binutils-dev
 fi
 
 build() {
