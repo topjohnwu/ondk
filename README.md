@@ -35,11 +35,6 @@ LLVM_BIN="<ondk>/toolchains/llvm/prebuilt/<os>-x86_64/bin"
 # You can also set this in config.toml, check the official documentation.
 export CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER="$LLVM_BIN/aarch64-linux-android21-clang"
 
-# We also need to specify the NDK C compiler with proper flags.
-# This is used for feature detection internally in std's build system.
-export TARGET_CC="$LLVM_BIN/clang"
-export TARGET_CFLAGS='--target=aarch64-linux-android21'
-
 # Finally, build our project with -Z build-std
 cargo <+name> build -Z build-std --target aarch64-linux-android
 ```
