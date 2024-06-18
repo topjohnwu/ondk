@@ -47,6 +47,6 @@ codegen-units = 1
 
 [target.x86_64-unknown-linux-gnu]
 llvm-has-rust-patches = false
-cc = "clang-12"
-cxx = "clang++-12"
-linker = "clang-12"
+cc = "clang-17"
+cxx = "clang++-17"
+linker = "clang-17"

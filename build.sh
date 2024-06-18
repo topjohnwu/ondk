@@ -23,30 +23,21 @@ if [ $OS = "darwin" ]; then
   NATIVE_TRIPLE="${NATIVE_ARCH}-apple-darwin"
   DYN_EXT='dylib'
   EXE_FMT='Mach-O'
-
-  # Hardcode to 16k page to support both x64 and arm64
-  # export JEMALLOC_SYS_WITH_LG_PAGE=14
-
-  command -v ninja >/dev/null || brew install ninja
-  command -v zstd >/dev/null || brew install zstd
-  brew install binutils
-  sed -i '' "s|BREW_PREFIX|$(brew --prefix)|g" config-darwin.toml
 else
   NDK_DIRNAME='linux-x86_64'
   TRIPLE="${ARCH}-unknown-linux-gnu"
   NATIVE_TRIPLE="${NATIVE_ARCH}-unknown-linux-gnu"
   DYN_EXT='so'
   EXE_FMT='ELF'
-
-  command -v cmake >/dev/null || sudo apt-get -y install cmake
-  command -v ninja >/dev/null || sudo apt-get -y install ninja-build
-  command -v clang-12 >/dev/null || sudo apt-get -y install clang-12
-  command -v lld-12 >/dev/null || sudo apt-get -y install lld-12
-  dpkg-query -W libzstd-dev >/dev/null 2>&1 || sudo apt-get -y install libzstd-dev
-  sudo apt-get -y install binutils-dev
 fi
 
 build() {
+  if [ $OS = "darwin" ]; then
+    sed -i '' "s|BREW_PREFIX|$(brew --prefix)|g" config-darwin.toml
+    # Manually set page size if cross compilation is required (arm64 require 16k page)
+    # export JEMALLOC_SYS_WITH_LG_PAGE=14
+  fi
+
   cd rust
   python3 ./x.py --config "../config-${OS}.toml" --host $TRIPLE install
   cd ../
