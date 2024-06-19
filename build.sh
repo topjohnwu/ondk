@@ -33,7 +33,8 @@ fi
 
 build() {
   if [ $OS = "darwin" ]; then
-    sed -i '' "s|BREW_PREFIX|$(brew --prefix)|g" config-darwin.toml
+    sed "s|BREW_PREFIX|$(brew --prefix)|g" config-darwin-sample.toml > config-darwin.toml
+    export MACOSX_DEPLOYMENT_TARGET=11.0
     # Manually set page size if cross compilation is required (arm64 require 16k page)
     # export JEMALLOC_SYS_WITH_LG_PAGE=14
   fi
