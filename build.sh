@@ -51,8 +51,7 @@ build() {
   set_rust_cfg rust.lto thin
 
   cd rust
-  python3 ./x.py --config "../config.toml" --host $TRIPLE \
-    $RUST_CFG "--set=llvm.build-config={ $LLVM_BUILD_CFG }" install
+  eval python3 ./x.py --config ../config.toml --host $TRIPLE $(print_rust_cfg) install
   cd ../
 
   cd out

@@ -34,8 +34,7 @@ build() {
   set_rust_cfg dist.include-mingw-linker true
 
   cd rust
-  python ./x.py --config '../config.toml' --build $TRIPLE \
-    $RUST_CFG "--set=llvm.build-config={ $LLVM_BUILD_CFG }" install
+  eval python ./x.py --config ../config.toml --build $TRIPLE $(print_rust_cfg) install
   cd ../
 
   cd out
