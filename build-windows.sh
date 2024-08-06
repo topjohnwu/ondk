@@ -28,8 +28,14 @@ clean_storage() {
 }
 
 build() {
+  set_llvm_build_cfg LLVM_USE_SYMLINKS TRUE
+  set_rust_cfg llvm.static-libstdcpp true
+  set_rust_cfg llvm.ldflags "\"-s -static-libgcc -static\""
+  set_rust_cfg dist.include-mingw-linker true
+
   cd rust
-  python ./x.py --config '../config-windows.toml' --build $TRIPLE install
+  python ./x.py --config '../config.toml' --build $TRIPLE \
+    $RUST_CFG "--set=llvm.build-config={ $LLVM_BUILD_CFG }" install
   cd ../
 
   cd out

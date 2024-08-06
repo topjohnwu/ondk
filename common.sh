@@ -1,24 +1,38 @@
 # Copyright 2022-2024 Google LLC.
 # SPDX-License-Identifier: Apache-2.0
 
-RUST_VERSION='1.79.0'
+RUST_VERSION='1.80.0'
 
-NDK_VERSION='r27-beta2'
+NDK_VERSION='r27'
 NDK_DIR_VERSION=$NDK_VERSION
 
 # These revisions are obtained from the NDK's LLVM manifest.xml and clang_source_info.md
 # Update in sync with the NDK package
 LLVM_VERSION='3c92011b600bdf70424e2547594dd461fe411a41'
 LLVM_SVN='522817'
-LLVM_ANDROID_VERSION='438b79812959d90a4a9252ddab53f9d90d2d0d98'
-TOOLCHAIN_UTILS_VERSION='d865a56cd71d2673038848799595850c8113bbca'
+LLVM_ANDROID_VERSION='5ab132bd1afa945695853fa093dfcc839e45f97c'
+TOOLCHAIN_UTILS_VERSION='dd1ee45a84cb07337f9d5d0a6769d9b865c6e620'
 
-OUTPUT_VERSION='r27.2'
+OUTPUT_VERSION='r27.3'
 
 PYTHON_CMD='python3'
 
 set -e
 shopt -s nullglob
+
+# key value
+set_llvm_build_cfg() {
+  if [ -z "$LLVM_BUILD_CFG" ]; then
+    LLVM_BUILD_CFG="\"$1\" = \"$2\""
+  else
+    LLVM_BUILD_CFG="$LLVM_BUILD_CFG, \"$1\" = \"$2\""
+  fi
+}
+
+# key value
+set_rust_cfg() {
+  RUST_CFG="$RUST_CFG --set=$1=$2"
+}
 
 # url sha
 git_clone_sha() {
@@ -110,6 +124,10 @@ run_cmd() {
       ;;
     build)
       rm -rf out
+      # Set common LLVM configs
+      set_llvm_build_cfg LLVM_VERSION_SUFFIX
+      set_llvm_build_cfg LLVM_ENABLE_ZSTD FORCE_ON
+      set_llvm_build_cfg LLVM_USE_STATIC_ZSTD TRUE
       build
       ;;
     ndk)

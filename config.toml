@@ -1,19 +1,11 @@
-change-id = 123711
+change-id = 125535
 
 [llvm]
 targets = "AArch64;ARM;X86;RISCV"
 experimental-targets = ""
 clang = true
-static-libstdcpp = true
-ldflags = "-s -static-libgcc -static"
 download-ci-llvm = false
 version-suffix = ""
-
-[llvm.build-config]
-LLVM_VERSION_SUFFIX = ""
-LLVM_ENABLE_ZSTD = "FORCE_ON"
-LLVM_USE_STATIC_ZSTD = "TRUE"
-LLVM_USE_SYMLINKS = "TRUE"
 
 [build]
 docs = false
@@ -41,8 +33,17 @@ llvm-tools = true
 strip = true
 codegen-units = 1
 
-[dist]
-include-mingw-linker = true
+[target.x86_64-unknown-linux-gnu]
+llvm-has-rust-patches = false
+cc = "clang-18"
+cxx = "clang++-18"
+linker = "clang-18"
+
+[target.aarch64-apple-darwin]
+llvm-has-rust-patches = false
+
+[target.x86_64-apple-darwin]
+llvm-has-rust-patches = false
 
 [target.x86_64-pc-windows-gnu]
 llvm-has-rust-patches = false
