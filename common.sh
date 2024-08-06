@@ -35,8 +35,7 @@ set_rust_cfg() {
 }
 
 print_rust_cfg() {
-  set_rust_cfg llvm.build-config "{ $LLVM_BUILD_CFG }"
-  echo $RUST_CFG
+  echo $RUST_CFG "'--set=llvm.build-config={ $LLVM_BUILD_CFG }'"
 }
 
 # url sha

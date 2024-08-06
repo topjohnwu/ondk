@@ -19,7 +19,6 @@ tools = [
     "rustfmt",
     "rust-analyzer-proc-macro-srv",
 ]
-optimized-compiler-builtins = false
 cargo-native-static = true
 
 [install]
