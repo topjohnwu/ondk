@@ -28,13 +28,13 @@ clean_storage() {
 }
 
 build() {
-  set_llvm_build_cfg LLVM_USE_SYMLINKS TRUE
-  set_rust_cfg llvm.static-libstdcpp true
-  set_rust_cfg llvm.ldflags '"-s -static-libgcc -static"'
-  set_rust_cfg dist.include-mingw-linker true
+  set_llvm_cfg LLVM_USE_SYMLINKS TRUE
+  set_build_cfg llvm.static-libstdcpp true
+  set_build_cfg llvm.ldflags '"-s -static-libgcc -static"'
+  set_build_cfg dist.include-mingw-linker true
 
   cd rust
-  eval python ./x.py --config ../config.toml --build $TRIPLE $(print_rust_cfg) install
+  eval python ./x.py --config ../config.toml --build $TRIPLE $(print_build_cfg) install
   cd ../
 
   cd out

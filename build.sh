@@ -37,21 +37,21 @@ build() {
     # Manually set page size if cross compilation is required (arm64 require 16k page)
     # export JEMALLOC_SYS_WITH_LG_PAGE=14
 
-    set_llvm_build_cfg LLVM_BINUTILS_INCDIR $(brew --prefix)/opt/binutils/include
-    set_rust_cfg rust.jemalloc true
+    set_llvm_cfg LLVM_BINUTILS_INCDIR $(brew --prefix)/opt/binutils/include
+    set_build_cfg rust.jemalloc true
   else
-    set_llvm_build_cfg LLVM_BINUTILS_INCDIR /usr/include
-    set_rust_cfg llvm.static-libstdcpp true
-    set_rust_cfg rust.use-lld self-contained
+    set_llvm_cfg LLVM_BINUTILS_INCDIR /usr/include
+    set_build_cfg llvm.static-libstdcpp true
+    set_build_cfg rust.use-lld self-contained
   fi
 
-  set_llvm_build_cfg LLVM_ENABLE_PLUGINS FORCE_ON
-  set_rust_cfg llvm.thin-lto true
-  set_rust_cfg llvm.link-shared true
-  set_rust_cfg rust.lto thin
+  set_llvm_cfg LLVM_ENABLE_PLUGINS FORCE_ON
+  set_build_cfg llvm.thin-lto true
+  set_build_cfg llvm.link-shared true
+  set_build_cfg rust.lto thin
 
   cd rust
-  eval python3 ./x.py --config ../config.toml --host $TRIPLE $(print_rust_cfg) install
+  eval python3 ./x.py --config ../config.toml --host $TRIPLE $(print_build_cfg) install
   cd ../
 
   cd out

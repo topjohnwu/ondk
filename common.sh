@@ -21,7 +21,7 @@ set -e
 shopt -s nullglob
 
 # key value
-set_llvm_build_cfg() {
+set_llvm_cfg() {
   if [ -z "$LLVM_BUILD_CFG" ]; then
     LLVM_BUILD_CFG="\"$1\" = \"$2\""
   else
@@ -30,11 +30,11 @@ set_llvm_build_cfg() {
 }
 
 # key value
-set_rust_cfg() {
+set_build_cfg() {
   RUST_CFG="$RUST_CFG '--set=$1=$2'"
 }
 
-print_rust_cfg() {
+print_build_cfg() {
   echo $RUST_CFG "'--set=llvm.build-config={ $LLVM_BUILD_CFG }'"
 }
 
@@ -129,9 +129,9 @@ run_cmd() {
     build)
       rm -rf out
       # Set common LLVM configs
-      set_llvm_build_cfg LLVM_VERSION_SUFFIX
-      set_llvm_build_cfg LLVM_ENABLE_ZSTD FORCE_ON
-      set_llvm_build_cfg LLVM_USE_STATIC_ZSTD TRUE
+      set_llvm_cfg LLVM_VERSION_SUFFIX
+      set_llvm_cfg LLVM_ENABLE_ZSTD FORCE_ON
+      set_llvm_cfg LLVM_USE_STATIC_ZSTD TRUE
       build
       ;;
     ndk)
