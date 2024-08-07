@@ -46,9 +46,7 @@ build() {
   fi
 
   set_llvm_cfg LLVM_ENABLE_PLUGINS FORCE_ON
-  set_build_cfg llvm.thin-lto true
   set_build_cfg llvm.link-shared true
-  set_build_cfg rust.lto thin
 
   cd rust
   eval python3 ./x.py --config ../config.toml --host $TRIPLE $(print_build_cfg) install

@@ -5,6 +5,7 @@ targets = "AArch64;ARM;X86;RISCV"
 experimental-targets = ""
 clang = true
 download-ci-llvm = false
+thin-lto = true
 version-suffix = ""
 
 [build]
@@ -31,6 +32,7 @@ lld = true
 llvm-tools = true
 strip = true
 codegen-units = 1
+lto = "thin"
 
 [target.x86_64-unknown-linux-gnu]
 llvm-has-rust-patches = false
@@ -46,3 +48,6 @@ llvm-has-rust-patches = false
 
 [target.x86_64-pc-windows-gnu]
 llvm-has-rust-patches = false
+cc = "clang.exe"
+cxx = "clang++.exe"
+linker = "clang.exe"
