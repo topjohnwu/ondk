@@ -17,6 +17,7 @@ OS='windows'
 NDK_DIRNAME='windows-x86_64'
 TRIPLE='x86_64-pc-windows-gnu'
 DYN_EXT='dll'
+EXE_FMT='PE32+'
 PYTHON_CMD='python'
 
 clean_storage() {
@@ -30,7 +31,6 @@ clean_storage() {
 build() {
   set_llvm_cfg LLVM_USE_SYMLINKS TRUE
   set_build_cfg llvm.static-libstdcpp true
-  set_build_cfg llvm.ldflags '"-s -static-libgcc -static"'
   set_build_cfg dist.include-mingw-linker true
 
   cd rust
@@ -43,6 +43,7 @@ build() {
   cp -an ../rust/build/$TRIPLE/llvm/bin/. llvm-bin/.
   cp -af lib/rustlib/$TRIPLE/bin/rust-lld.exe llvm-bin/lld.exe
   cp -af ../rust/build/tmp/dist/lib/rustlib/. lib/rustlib/.
+  strip_exe
   cd ..
 }
 

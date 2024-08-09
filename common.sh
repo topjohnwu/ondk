@@ -1,7 +1,7 @@
 # Copyright 2022-2024 Google LLC.
 # SPDX-License-Identifier: Apache-2.0
 
-RUST_VERSION='1.80.0'
+RUST_VERSION='1.80.1'
 
 NDK_VERSION='r27'
 NDK_DIR_VERSION=$NDK_VERSION
@@ -13,7 +13,7 @@ LLVM_SVN='522817'
 LLVM_ANDROID_VERSION='5ab132bd1afa945695853fa093dfcc839e45f97c'
 TOOLCHAIN_UTILS_VERSION='dd1ee45a84cb07337f9d5d0a6769d9b865c6e620'
 
-OUTPUT_VERSION='r27.3'
+OUTPUT_VERSION='r27.4'
 
 PYTHON_CMD='python3'
 
@@ -36,6 +36,11 @@ set_build_cfg() {
 
 print_build_cfg() {
   echo $RUST_CFG "'--set=llvm.build-config={ $LLVM_BUILD_CFG }'"
+}
+
+strip_exe() {
+  llvm-bin/llvm-strip -s $(find llvm-bin -type f -exec sh -c "file {} | grep -q $EXE_FMT" \; -print)
+  llvm-bin/llvm-strip -s $(find lib -maxdepth 1 -type f -exec sh -c "file {} | grep -q $EXE_FMT" \; -print)
 }
 
 # url sha

@@ -60,11 +60,7 @@ build() {
   cp -af lib/rustlib/$TRIPLE/bin/rust-lld llvm-bin/lld
   ln -sf lld llvm-bin/ld
   find ../rust/build/$TRIPLE/llvm/lib -name "*.${DYN_EXT}*" -exec cp -an {} lib \;
-
-  # Strip executables
-  llvm-bin/llvm-strip -s $(find llvm-bin -type f -exec sh -c "file {} | grep -q $EXE_FMT" \; -print)
-  llvm-bin/llvm-strip -s $(find lib -maxdepth 1 -type f -exec sh -c "file {} | grep -q $EXE_FMT" \; -print)
-
+  strip_exe
   cd ..
 }
 

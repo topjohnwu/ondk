@@ -6,6 +6,7 @@ experimental-targets = ""
 clang = true
 download-ci-llvm = false
 version-suffix = ""
+ldflags = "-s"
 
 [build]
 docs = false
