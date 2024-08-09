@@ -47,3 +47,6 @@ llvm-has-rust-patches = false
 
 [target.x86_64-pc-windows-gnu]
 llvm-has-rust-patches = false
+cc = "clang"
+cxx = "clang++"
+linker = "clang"

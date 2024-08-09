@@ -30,7 +30,8 @@ clean_storage() {
 
 build() {
   set_llvm_cfg LLVM_USE_SYMLINKS TRUE
-  set_build_cfg llvm.static-libstdcpp true
+  set_llvm_cfg LLVM_ENABLE_LLD TRUE
+  set_build_cfg rust.use-lld self-contained
   set_build_cfg dist.include-mingw-linker true
 
   cd rust
