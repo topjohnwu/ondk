@@ -44,7 +44,6 @@ build() {
   cp -an ../rust/build/$TRIPLE/llvm/bin/. llvm-bin/.
   cp -af lib/rustlib/$TRIPLE/bin/rust-lld.exe llvm-bin/lld.exe
   cp -af ../rust/build/tmp/dist/lib/rustlib/. lib/rustlib/.
-  strip_exe
   cd ..
 }
 
