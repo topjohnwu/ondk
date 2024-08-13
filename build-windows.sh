@@ -44,6 +44,14 @@ build() {
   cp -an ../rust/build/$TRIPLE/llvm/bin/. llvm-bin/.
   cp -af lib/rustlib/$TRIPLE/bin/rust-lld.exe llvm-bin/lld.exe
   cp -af ../rust/build/tmp/dist/lib/rustlib/. lib/rustlib/.
+
+  local MINGW_DIR=lib/rustlib/$TRIPLE/bin/self-contained
+
+  # Copy runtime dlls
+  cp_sys_dlls bin/rustc.exe
+  cp_sys_dlls llvm-bin/clang.exe
+  cp_sys_dlls $MINGW_DIR/ld.exe
+  cp_sys_dlls $MINGW_DIR/x86_64-w64-mingw32-gcc.exe
   cd ..
 }
 
@@ -64,7 +72,9 @@ ndk() {
   cd ndk/toolchains
 
   local LLVM_DIR=llvm/prebuilt/$NDK_DIRNAME
-  local MINGW_DIR=rust/lib/rustlib/$TRIPLE/bin/self-contained
+
+  # First copy over all runtime dlls
+  cp -af rust/llvm-bin/*.dll $LLVM_DIR/bin
 
   # Replace files with those from the rust toolchain
   touch $LLVM_DIR/bin/lld.exe
@@ -72,12 +82,6 @@ ndk() {
   rm -rf rust/llvm-bin
   ln -sf lld.exe $LLVM_DIR/bin/ld.exe
   ln -sf lld.exe $LLVM_DIR/bin/ld.lld.exe
-
-  # Copy runtime dlls
-  cp_sys_dlls $LLVM_DIR/bin/clang.exe
-  cp_sys_dlls rust/bin/rustc.exe
-  cp_sys_dlls $MINGW_DIR/ld.exe
-  cp_sys_dlls $MINGW_DIR/x86_64-w64-mingw32-gcc.exe
 
   cd ../..
 }
