@@ -1,19 +1,19 @@
 # Copyright 2022-2024 Google LLC.
 # SPDX-License-Identifier: Apache-2.0
 
-RUST_VERSION='1.80.1'
+RUST_VERSION='1.81.0'
 
-NDK_VERSION='r27'
+NDK_VERSION='r27b'
 NDK_DIR_VERSION=$NDK_VERSION
 
-# These revisions are obtained from the NDK's LLVM manifest.xml and clang_source_info.md
+# These revisions are obtained from the NDK's LLVM manifest.xml
 # Update in sync with the NDK package
-LLVM_VERSION='3c92011b600bdf70424e2547594dd461fe411a41'
+LLVM_VERSION='d8003a456d14a3deb8054cdaa529ffbf02d9b262'
 LLVM_SVN='522817'
-LLVM_ANDROID_VERSION='5ab132bd1afa945695853fa093dfcc839e45f97c'
+LLVM_ANDROID_VERSION='2a4ee244d6dd0dcb8365590b898f7a40ec3cb87a'
 TOOLCHAIN_UTILS_VERSION='dd1ee45a84cb07337f9d5d0a6769d9b865c6e620'
 
-OUTPUT_VERSION='r27.4'
+OUTPUT_VERSION='r27.5'
 
 PYTHON_CMD='python3'
 
@@ -71,7 +71,7 @@ clone() {
   git submodule update --init --depth=1
   cd ../
 
-  git_clone_sha https://github.com/llvm/llvm-project $LLVM_VERSION
+  git_clone_sha https://android.googlesource.com/toolchain/llvm-project $LLVM_VERSION
   git_clone_sha https://android.googlesource.com/toolchain/llvm_android $LLVM_ANDROID_VERSION
   git_clone_sha https://android.googlesource.com/platform/external/toolchain-utils $TOOLCHAIN_UTILS_VERSION
 
