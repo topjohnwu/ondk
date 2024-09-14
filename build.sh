@@ -23,6 +23,8 @@ if [ $OS = "darwin" ]; then
   NATIVE_TRIPLE="${NATIVE_ARCH}-apple-darwin"
   DYN_EXT='dylib'
   EXE_FMT='Mach-O'
+  # Always use GNU patch
+  export PATH="$(brew --prefix)/opt/gpatch/bin:$PATH"
 else
   NDK_DIRNAME='linux-x86_64'
   TRIPLE="${ARCH}-unknown-linux-gnu"

@@ -99,7 +99,7 @@ jobs:
 
       - name: Build toolchain
         run: |
-          brew reinstall ninja zstd binutils
+          brew reinstall ninja zstd binutils gpatch
           ./build.sh clone build
           mkdir tmp
           tar c out | xz --x86 --lzma2 > tmp/out.x64.tar.xz
@@ -127,7 +127,7 @@ jobs:
 
       - name: Build toolchain
         run: |
-          brew reinstall ninja zstd binutils
+          brew reinstall ninja zstd binutils gpatch
           ./build.sh clone build
           mkdir tmp
           tar c out | xz > tmp/out.arm64.tar.xz
