@@ -1,19 +1,20 @@
 # Copyright 2022-2024 Google LLC.
 # SPDX-License-Identifier: Apache-2.0
 
-RUST_VERSION='1.81.0'
+# Switch to 1.82.0 once released
+RUST_VERSION='stable'
 
-NDK_VERSION='r27b'
+NDK_VERSION='r28-beta1'
 NDK_DIR_VERSION=$NDK_VERSION
 
 # These revisions are obtained from the NDK's LLVM manifest.xml
 # Update in sync with the NDK package
-LLVM_VERSION='d8003a456d14a3deb8054cdaa529ffbf02d9b262'
-LLVM_SVN='522817'
-LLVM_ANDROID_VERSION='2a4ee244d6dd0dcb8365590b898f7a40ec3cb87a'
+LLVM_VERSION='97a699bf4812a18fb657c2779f5296a4ab2694d2'
+LLVM_SVN='530567'
+LLVM_ANDROID_VERSION='ab3ade05b26c45b59ac47b3779b7a6c999e6d634'
 TOOLCHAIN_UTILS_VERSION='dd1ee45a84cb07337f9d5d0a6769d9b865c6e620'
 
-OUTPUT_VERSION='r27.5'
+OUTPUT_VERSION='r28.0'
 
 PYTHON_CMD='python3'
 
@@ -135,8 +136,6 @@ run_cmd() {
       rm -rf out
       # Set common LLVM configs
       set_llvm_cfg LLVM_VERSION_SUFFIX
-      set_llvm_cfg LLVM_ENABLE_ZSTD FORCE_ON
-      set_llvm_cfg LLVM_USE_STATIC_ZSTD TRUE
       build
       ;;
     ndk)

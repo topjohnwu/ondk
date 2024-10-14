@@ -1,4 +1,4 @@
-change-id = 127866
+change-id = 129295
 
 [llvm]
 targets = "AArch64;ARM;X86;RISCV"
@@ -7,6 +7,7 @@ clang = true
 download-ci-llvm = false
 version-suffix = ""
 ldflags = "-s"
+libzstd = true
 
 [build]
 docs = false
