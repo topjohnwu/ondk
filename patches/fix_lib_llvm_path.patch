@@ -1,8 +1,8 @@
 diff --git a/src/bootstrap/src/core/build_steps/llvm.rs b/src/bootstrap/src/core/build_steps/llvm.rs
-index e1eea31b..aa3465a3 100644
+index a2d40f6f..94a7e423 100644
 --- a/src/bootstrap/src/core/build_steps/llvm.rs
 +++ b/src/bootstrap/src/core/build_steps/llvm.rs
-@@ -535,7 +535,7 @@ fn run(self, builder: &Builder<'_>) -> LlvmResult {
+@@ -551,7 +551,7 @@ fn run(self, builder: &Builder<'_>) -> LlvmResult {
          // link to make llvm-config happy.
          if builder.llvm_link_shared() && target.contains("apple-darwin") {
              let lib_name = find_llvm_lib_name("dylib");
