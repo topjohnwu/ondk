@@ -62,6 +62,11 @@ build() {
   cp -af lib/rustlib/$TRIPLE/bin/rust-lld llvm-bin/lld
   ln -sf lld llvm-bin/ld
   find ../rust/build/$TRIPLE/llvm/lib -name "*.${DYN_EXT}*" -exec cp -an {} lib \;
+  local lib_llvm="libLLVM.${DYN_EXT}"
+  if [ -L "lib/$lib_llvm" ]; then
+    lib_llvm=$(readlink "lib/$lib_llvm")
+  fi
+  ln -s ../../../$lib_llvm lib/rustlib/$TRIPLE/lib/$lib_llvm
   strip_exe
   cd ..
 }
