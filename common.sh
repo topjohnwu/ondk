@@ -1,19 +1,19 @@
-# Copyright 2022-2024 Google LLC.
+# Copyright 2022-2025 Google LLC.
 # SPDX-License-Identifier: Apache-2.0
 
-RUST_VERSION='1.84.0'
+RUST_VERSION='1.85.0'
 
-NDK_VERSION='r28-beta2'
+NDK_VERSION='r28'
 NDK_DIR_VERSION=$NDK_VERSION
 
 # These revisions are obtained from the NDK's LLVM manifest.xml
 # Update in sync with the NDK package
 LLVM_VERSION='97a699bf4812a18fb657c2779f5296a4ab2694d2'
 LLVM_SVN='530567'
-LLVM_ANDROID_VERSION='8dfdf1fc93652ba216e3bcea41bbcd124f1185a5'
+LLVM_ANDROID_VERSION='a04a3e119c2bbc35ab20cc2b7147d4a0daab7d78'
 TOOLCHAIN_UTILS_VERSION='dd1ee45a84cb07337f9d5d0a6769d9b865c6e620'
 
-OUTPUT_VERSION='r28.2'
+OUTPUT_VERSION='r28.3'
 
 PYTHON_CMD='python3'
 
