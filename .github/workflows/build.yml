@@ -23,6 +23,7 @@ jobs:
 
       - name: Build toolchain
         run: |
+          sudo apt-get update
           sudo apt-get -y install cmake ninja-build libzstd-dev binutils-dev
           wget https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
