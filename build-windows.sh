@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2022-2024 Google LLC.
+# Copyright 2022-2025 Google LLC.
 # SPDX-License-Identifier: Apache-2.0
 
 if ! uname | grep -q 'MINGW64_NT'; then
@@ -30,19 +30,24 @@ clean_storage() {
 
 build() {
   set_llvm_cfg LLVM_USE_SYMLINKS TRUE
-  set_llvm_cfg LLVM_ENABLE_LLD TRUE
+  # BUG: llvm.use-libcxx will not actually set LLVM_ENABLE_LIBCXX
+  set_llvm_cfg LLVM_ENABLE_LIBCXX TRUE
+  # BUG: libstdc++ is incompatible when LTO is enabled, force use libc++
+  set_build_cfg llvm.use-libcxx true
+  set_build_cfg llvm.static-libstdcpp true
   set_build_cfg rust.use-lld self-contained
   set_build_cfg dist.include-mingw-linker true
 
   cd rust
   eval python ./x.py --config ../config.toml --build $TRIPLE $(print_build_cfg) install
   cd ../
+}
 
+collect() {
   cd out
   find . -name '*.old' -delete
   cp -af ../rust/build/$TRIPLE/llvm/bin llvm-bin || true
   cp -an ../rust/build/$TRIPLE/llvm/bin/. llvm-bin/.
-  cp -af lib/rustlib/$TRIPLE/bin/rust-lld.exe llvm-bin/lld.exe
   cp -af ../rust/build/tmp/dist/lib/rustlib/. lib/rustlib/.
 
   local MINGW_DIR=lib/rustlib/$TRIPLE/bin/self-contained
@@ -52,13 +57,15 @@ build() {
   cp_sys_dlls llvm-bin/clang.exe
   cp_sys_dlls $MINGW_DIR/ld.exe
   cp_sys_dlls $MINGW_DIR/x86_64-w64-mingw32-gcc.exe
+
+  strip_exe ../rust/build/$TRIPLE/llvm/bin/llvm-strip.exe
   cd ..
 }
 
 cp_sys_dlls() {
   local dir=$(dirname $1)
   for lib in $(ldd $1 | grep ' /ucrt64/bin/' | awk '{ print $1 }'); do
-    cp /ucrt64/bin/$lib $dir
+    cp -v /ucrt64/bin/$lib $dir
   done
 }
 
@@ -80,8 +87,6 @@ ndk() {
   touch $LLVM_DIR/bin/lld.exe
   update_dir rust/llvm-bin $LLVM_DIR/bin
   rm -rf rust/llvm-bin
-  ln -sf lld.exe $LLVM_DIR/bin/ld.exe
-  ln -sf lld.exe $LLVM_DIR/bin/ld.lld.exe
 
   cd ../..
 }

@@ -1,5 +1,6 @@
 /rust
 /out
+/rust-out
 /dist
 /tmp
 /ondk-*

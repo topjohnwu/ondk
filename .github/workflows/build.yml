@@ -62,10 +62,11 @@ jobs:
           msystem: UCRT64
           update: true
           install: make diffutils tar patch unzip gzip
-          pacboy: 7zip:p python:p cmake:p gcc:p ninja:p zstd:p clang:p lld:p
+          pacboy: 7zip:p python:p cmake:p gcc:p ninja:p zstd:p clang:p lld:p libc++:p
 
       - name: Build toolchain
         run: |
+          rm -f /ucrt64/lib/libzstd.dll.a
           cp -r $GITHUB_WORKSPACE /c/ondk
           cd /c/ondk
           bash build-windows.sh

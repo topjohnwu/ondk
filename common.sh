@@ -39,8 +39,9 @@ print_build_cfg() {
 }
 
 strip_exe() {
-  llvm-bin/llvm-strip -s $(find llvm-bin -type f -exec sh -c "file {} | grep -q $EXE_FMT" \; -print)
-  llvm-bin/llvm-strip -s $(find lib -maxdepth 1 -type f -exec sh -c "file {} | grep -q $EXE_FMT" \; -print)
+  $1 -s $(find bin -type f -exec sh -c "file {} | grep -q $EXE_FMT" \; -print)
+  $1 -s $(find llvm-bin -type f -exec sh -c "file {} | grep -q $EXE_FMT" \; -print)
+  $1 -s $(find lib -maxdepth 1 -type f -exec sh -c "file {} | grep -q $EXE_FMT" \; -print)
 }
 
 # url sha
@@ -132,10 +133,15 @@ run_cmd() {
       clone
       ;;
     build)
-      rm -rf out
+      rm -rf rust-out
       # Set common LLVM configs
       set_llvm_cfg LLVM_VERSION_SUFFIX
       build
+      ;;
+    collect)
+      rm -rf out
+      cp -af rust-out out
+      collect
       ;;
     ndk)
       rm -rf ndk
@@ -162,6 +168,7 @@ parse_args() {
   if [ $# -eq 0 ]; then
     run_cmd clone
     run_cmd build
+    run_cmd collect
     run_cmd ndk
     run_cmd dist
   else

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2022-2024 Google LLC.
+# Copyright 2022-2025 Google LLC.
 # SPDX-License-Identifier: Apache-2.0
 
 . common.sh
@@ -48,14 +48,13 @@ build() {
   fi
 
   set_llvm_cfg LLVM_ENABLE_PLUGINS FORCE_ON
-  set_build_cfg llvm.thin-lto true
-  set_build_cfg llvm.link-shared true
-  set_build_cfg rust.lto thin
 
   cd rust
   eval python3 ./x.py --config ../config.toml --host $TRIPLE $(print_build_cfg) install
   cd ../
+}
 
+collect() {
   cd out
   find . -name '*.old' -delete
   cp -af ../rust/build/$TRIPLE/llvm/bin llvm-bin
@@ -67,7 +66,7 @@ build() {
     lib_llvm=$(readlink "lib/$lib_llvm")
   fi
   ln -s ../../../$lib_llvm lib/rustlib/$TRIPLE/lib/$lib_llvm
-  strip_exe
+  strip_exe llvm-bin/llvm-strip
   cd ..
 }
 

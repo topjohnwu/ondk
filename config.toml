@@ -5,6 +5,8 @@ targets = "AArch64;ARM;X86;RISCV"
 experimental-targets = ""
 clang = true
 download-ci-llvm = false
+link-shared = true
+thin-lto = true
 version-suffix = ""
 ldflags = "-s"
 libzstd = true
@@ -24,11 +26,12 @@ tools = [
 cargo-native-static = true
 
 [install]
-prefix = "../out"
+prefix = "../rust-out"
 sysconfdir = "etc"
 
 [rust]
 channel = "nightly"
+lto = "thin"
 lld = true
 llvm-tools = true
 strip = true
