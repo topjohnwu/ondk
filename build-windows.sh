@@ -26,15 +26,17 @@ clean_storage() {
     '/c/Program Files/PostgreSQL' '/c/Program Files/dotnet' \
     "$JAVA_HOME_8_X64" "$JAVA_HOME_11_X64" "$JAVA_HOME_17_X64" \
     "$GOROOT_1_15_X64" "$GOROOT_1_16_X64" "$GOROOT_1_17_X64" "$GOROOT_1_18_X64"
+  
+  # Remove libzstd.dll.a to make sure zstd is statically linked
+  rm -f /ucrt64/lib/libzstd.dll.a
 }
 
 build() {
   set_llvm_cfg LLVM_USE_SYMLINKS TRUE
   # BUG: llvm.use-libcxx will not actually set LLVM_ENABLE_LIBCXX
   set_llvm_cfg LLVM_ENABLE_LIBCXX TRUE
-  # BUG: libstdc++ is incompatible when LTO is enabled, force use libc++
+  # MinGW libstdc++ is incompatible with clang when LTO is enabled, we have to use libc++
   set_build_cfg llvm.use-libcxx true
-  set_build_cfg llvm.static-libstdcpp true
   set_build_cfg rust.use-lld self-contained
   set_build_cfg dist.include-mingw-linker true
 
@@ -45,7 +47,11 @@ build() {
 
 collect() {
   cd out
+
+  # Remove unused files
   find . -name '*.old' -delete
+  rm -rf lib/rustlib/$TRIPLE/bin/*
+
   cp -af ../rust/build/$TRIPLE/llvm/bin llvm-bin || true
   cp -an ../rust/build/$TRIPLE/llvm/bin/. llvm-bin/.
   cp -af ../rust/build/tmp/dist/lib/rustlib/. lib/rustlib/.
