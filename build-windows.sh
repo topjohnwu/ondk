@@ -49,10 +49,7 @@ collect() {
   cp -af rust-out out
   cd out
 
-  # Remove unused files
   find . -name '*.old' -delete
-  rm -rf lib/rustlib/$TRIPLE/bin/*
-
   cp -af ../rust/build/$TRIPLE/llvm/bin llvm-bin || true
   cp -an ../rust/build/$TRIPLE/llvm/bin/. llvm-bin/.
   cp -af ../rust/build/tmp/dist/lib/rustlib/. lib/rustlib/.
