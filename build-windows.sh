@@ -26,7 +26,7 @@ clean_storage() {
     '/c/Program Files/PostgreSQL' '/c/Program Files/dotnet' \
     "$JAVA_HOME_8_X64" "$JAVA_HOME_11_X64" "$JAVA_HOME_17_X64" \
     "$GOROOT_1_15_X64" "$GOROOT_1_16_X64" "$GOROOT_1_17_X64" "$GOROOT_1_18_X64"
-  
+
   # Remove libzstd.dll.a to make sure zstd is statically linked
   rm -f /ucrt64/lib/libzstd.dll.a
 }
@@ -46,6 +46,7 @@ build() {
 }
 
 collect() {
+  cp -af rust-out out
   cd out
 
   # Remove unused files

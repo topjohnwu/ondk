@@ -140,7 +140,6 @@ run_cmd() {
       ;;
     collect)
       rm -rf out
-      cp -af rust-out out
       collect
       ;;
     ndk)
@@ -158,7 +157,6 @@ run_cmd() {
       ;;
     *)
       echo "Unknown action \"$1\""
-      echo "./build.sh clone/build/ndk/dist"
       exit 1
       ;;
   esac

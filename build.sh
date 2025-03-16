@@ -55,11 +55,11 @@ build() {
 }
 
 collect() {
+  cp -af rust-out out
   cd out
+
   find . -name '*.old' -delete
   cp -af ../rust/build/$TRIPLE/llvm/bin llvm-bin
-  cp -af lib/rustlib/$TRIPLE/bin/rust-lld llvm-bin/lld
-  ln -sf lld llvm-bin/ld
   find ../rust/build/$TRIPLE/llvm/lib -name "*.${DYN_EXT}*" -exec cp -an {} lib \;
   local lib_llvm="libLLVM.${DYN_EXT}"
   if [ -L "lib/$lib_llvm" ]; then
