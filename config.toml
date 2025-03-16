@@ -32,8 +32,7 @@ sysconfdir = "etc"
 [rust]
 channel = "nightly"
 lto = "thin"
-lld = true
-llvm-tools = true
+lld = false
 strip = true
 codegen-units = 1
 
