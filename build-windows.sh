@@ -41,7 +41,7 @@ build() {
   set_build_cfg dist.include-mingw-linker true
 
   cd src/rust
-  eval python ./x.py --config ../config.toml --build $TRIPLE $(print_build_cfg) install
+  eval python ./x.py --config ../../config.toml --build $TRIPLE $(print_build_cfg) install
   cd ../../
 }
 
