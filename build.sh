@@ -44,32 +44,35 @@ build() {
   else
     set_llvm_cfg LLVM_BINUTILS_INCDIR /usr/include
     set_build_cfg llvm.static-libstdcpp true
-    set_build_cfg rust.use-lld self-contained
+    set_build_cfg rust.use-lld true
   fi
 
   set_llvm_cfg LLVM_ENABLE_PLUGINS FORCE_ON
 
-  cd rust
-  eval python3 ./x.py --config ../config.toml --host $TRIPLE $(print_build_cfg) install
-  cd ../
+  cd src/rust
+  eval python3 ./x.py --config ../../config.toml --host $TRIPLE $(print_build_cfg) install
+  cd ../../
 }
 
 collect() {
-  cp -af rust-out out
-  cd out
+  cp -af out/rust out/collect
+  cd out/collect
+
+  local RUST_BUILD=../../src/rust/build
 
   find . -name '*.old' -delete
-  cp -af ../rust/build/$TRIPLE/llvm/bin llvm-bin
-  find ../rust/build/$TRIPLE/llvm/lib -name "*.${DYN_EXT}*" -exec cp -an {} lib \;
+  cp -af $RUST_BUILD/$TRIPLE/llvm/bin llvm-bin
+  find $RUST_BUILD/$TRIPLE/llvm/lib -name "*.${DYN_EXT}*" -exec cp -an {} lib \;
   strip_exe llvm-bin/llvm-strip
-  cd ..
+  cd ../../
 }
 
 ndk() {
   dl_ndk
+  cd out
 
   # Copy the whole output folder into ndk
-  cp -af out ndk/toolchains/rust
+  cp -af collect ndk/toolchains/rust
 
   cd ndk/toolchains
 
@@ -81,7 +84,7 @@ ndk() {
   cd $LLVM_DIR/lib
   ln -sf ../../../../rust/lib/*.$DYN_EXT* .
 
-  cd ../../../../../../
+  cd ../../../../../../../
 }
 
 

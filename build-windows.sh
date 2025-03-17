@@ -37,22 +37,24 @@ build() {
   set_llvm_cfg LLVM_ENABLE_LIBCXX TRUE
   # MinGW libstdc++ is incompatible with clang when LTO is enabled, we have to use libc++
   set_build_cfg llvm.use-libcxx true
-  set_build_cfg rust.use-lld self-contained
+  set_build_cfg rust.use-lld true
   set_build_cfg dist.include-mingw-linker true
 
-  cd rust
+  cd src/rust
   eval python ./x.py --config ../config.toml --build $TRIPLE $(print_build_cfg) install
-  cd ../
+  cd ../../
 }
 
 collect() {
-  cp -af rust-out out
-  cd out
+  cp -af out/rust out/collect
+  cd out/collect
+
+  local RUST_BUILD=../../src/rust/build
 
   find . -name '*.old' -delete
-  cp -af ../rust/build/$TRIPLE/llvm/bin llvm-bin || true
-  cp -an ../rust/build/$TRIPLE/llvm/bin/. llvm-bin/.
-  cp -af ../rust/build/tmp/dist/lib/rustlib/. lib/rustlib/.
+  cp -af $RUST_BUILD/$TRIPLE/llvm/bin llvm-bin || true
+  cp -an $RUST_BUILD/$TRIPLE/llvm/bin/. llvm-bin/.
+  cp -af $RUST_BUILD/tmp/dist/lib/rustlib/. lib/rustlib/.
 
   local MINGW_DIR=lib/rustlib/$TRIPLE/bin/self-contained
 
@@ -62,8 +64,8 @@ collect() {
   cp_sys_dlls $MINGW_DIR/ld.exe
   cp_sys_dlls $MINGW_DIR/x86_64-w64-mingw32-gcc.exe
 
-  strip_exe ../rust/build/$TRIPLE/llvm/bin/llvm-strip.exe
-  cd ..
+  strip_exe $RUST_BUILD/$TRIPLE/llvm/bin/llvm-strip.exe
+  cd ../../
 }
 
 cp_sys_dlls() {
@@ -75,10 +77,11 @@ cp_sys_dlls() {
 
 ndk() {
   dl_ndk
+  cd out
 
   # Copy the whole output folder into ndk
-  cp -af out ndk/toolchains/rust || true
-  cp -an out/. ndk/toolchains/rust/.
+  cp -af collect ndk/toolchains/rust || true
+  cp -an collect/. ndk/toolchains/rust/.
 
   cd ndk/toolchains
 
@@ -92,7 +95,7 @@ ndk() {
   update_dir rust/llvm-bin $LLVM_DIR/bin
   rm -rf rust/llvm-bin
 
-  cd ../..
+  cd ../../../
 }
 
 export PATH='/c/Program Files/Git/cmd':$PATH

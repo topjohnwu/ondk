@@ -27,7 +27,7 @@ jobs:
           sudo apt-get -y install cmake ninja-build libzstd-dev binutils-dev
           wget https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
-          sudo ./llvm.sh 18
+          sudo ./llvm.sh 19
           rm llvm.sh
           ./build.sh
 
@@ -101,9 +101,9 @@ jobs:
       - name: Build toolchain
         run: |
           brew reinstall ninja zstd binutils gpatch
-          ./build.sh clone build
+          ./build.sh clone build collect
           mkdir tmp
-          tar c out | xz --x86 --lzma2 > tmp/out.x64.tar.xz
+          tar c out/collect | xz --x86 --lzma2 > tmp/out.x64.tar.xz
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
@@ -129,9 +129,9 @@ jobs:
       - name: Build toolchain
         run: |
           brew reinstall ninja zstd binutils gpatch
-          ./build.sh clone build
+          ./build.sh clone build collect
           mkdir tmp
-          tar c out | xz > tmp/out.arm64.tar.xz
+          tar c out/collect | xz > tmp/out.arm64.tar.xz
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4

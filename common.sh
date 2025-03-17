@@ -47,17 +47,19 @@ strip_exe() {
 # url sha
 git_clone_sha() {
   local dir=${1##*/}
-  mkdir "$dir"
-  cd "$dir"
+  echo "Cloning into 'src/$dir'..."
+  mkdir -p "src/$dir"
+  cd "src/$dir"
   git init -q
   git remote add origin $1
   git fetch --depth 1 origin $2
   git reset --hard FETCH_HEAD
-  cd ../
+  cd ../../
 }
 
 git_clone_branch() {
-  git clone --single-branch --depth 1 --branch $2 $1
+  local dir=${1##*/}
+  git clone --single-branch --depth 1 --branch $2 $1 src/$dir
 }
 
 skip_submodule() {
@@ -66,24 +68,24 @@ skip_submodule() {
 }
 
 clone_llvm() {
-  rm -rf llvm-project llvm_android toolchain-utils
+  rm -rf src/llvm-project src/llvm_android src/toolchain-utils
 
   git_clone_sha https://android.googlesource.com/toolchain/llvm-project $LLVM_VERSION
   git_clone_sha https://android.googlesource.com/toolchain/llvm_android $LLVM_ANDROID_VERSION
   git_clone_sha https://android.googlesource.com/platform/external/toolchain-utils $TOOLCHAIN_UTILS_VERSION
 
   # Patch the LLVM source code
-  $PYTHON_CMD toolchain-utils/llvm_tools/patch_manager.py \
+  $PYTHON_CMD src/toolchain-utils/llvm_tools/patch_manager.py \
     --svn_version $LLVM_SVN \
-    --patch_metadata_file llvm_android/patches/PATCHES.json \
-    --src_path llvm-project
+    --patch_metadata_file src/llvm_android/patches/PATCHES.json \
+    --src_path src/llvm-project
 }
 
 clone_rust() {
-  rm -rf rust
+  rm -rf src/rust
 
   git_clone_branch https://github.com/rust-lang/rust $RUST_VERSION
-  cd rust
+  cd src/rust
 
   # Skip unused submodules
   skip_submodule llvm-project
@@ -95,7 +97,7 @@ clone_rust() {
   git submodule update --init --depth=1
 
   # Apply patches
-  for p in ../patches/*.patch; do
+  for p in ../../patches/*.patch; do
     patch -p1 < $p
   done
 
@@ -103,7 +105,7 @@ clone_rust() {
   rm -rf src/llvm-project
   ln -s ../../llvm-project src/llvm-project
 
-  cd ../
+  cd ../../
 }
 
 update_dir() {
@@ -135,14 +137,16 @@ dl_ndk() {
   [ -f $NDK_ZIP ] || curl -O -L "https://dl.google.com/android/repository/$NDK_ZIP"
   rm -rf $NDK_EXTRACT
   unzip -q $NDK_ZIP
-  mv $NDK_EXTRACT ndk
-  echo $OUTPUT_VERSION > ndk/ONDK_VERSION
+  mv $NDK_EXTRACT out/ndk
+  echo $OUTPUT_VERSION > out/ndk/ONDK_VERSION
 }
 
 dist() {
+  cd out
   mv ndk "ondk-${OUTPUT_VERSION}"
-  mkdir dist
-  tar c "ondk-${OUTPUT_VERSION}" | xz --x86 --lzma2 > "dist/ondk-${OUTPUT_VERSION}-${OS}.tar.xz"
+  mkdir ../dist
+  tar c "ondk-${OUTPUT_VERSION}" | xz --x86 --lzma2 > "../dist/ondk-${OUTPUT_VERSION}-${OS}.tar.xz"
+  cd ../
 }
 
 run_cmd() {
@@ -158,27 +162,25 @@ run_cmd() {
       clone_rust
       ;;
     build)
-      rm -rf rust-out
+      rm -rf out/rust
       # Set common LLVM configs
       set_llvm_cfg LLVM_VERSION_SUFFIX
       build
       ;;
     collect)
-      rm -rf out
+      rm -rf out/collect
       collect
       ;;
     ndk)
-      rm -rf ndk
+      rm -rf out/ndk
       ndk
       ;;
     dist)
-      rm -rf dist ondk-*
+      rm -rf dist out/ondk-*
       dist
       ;;
     clean)
-      rm -rf rust llvm-project llvm_android toolchain-utils \
-        out out.arm out.x86 ndk tmp mingw64 \
-        android-ndk-*.zip ondk-* dist mingw.7z
+      rm -rf src out dist tmp android-ndk-*.zip
       ;;
     *)
       echo "Unknown action \"$1\""
