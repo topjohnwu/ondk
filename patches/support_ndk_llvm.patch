@@ -1,8 +1,8 @@
 diff --git a/compiler/rustc_codegen_llvm/src/llvm_util.rs b/compiler/rustc_codegen_llvm/src/llvm_util.rs
-index 628c0b1c..f9cc304b 100644
+index b4b5d6a5..05f1d4b4 100644
 --- a/compiler/rustc_codegen_llvm/src/llvm_util.rs
 +++ b/compiler/rustc_codegen_llvm/src/llvm_util.rs
-@@ -255,8 +255,8 @@ pub(crate) fn to_llvm_features<'a>(sess: &Session, s: &'a str) -> Option<LLVMFea
+@@ -258,8 +258,8 @@ pub(crate) fn to_llvm_features<'a>(sess: &Session, s: &'a str) -> Option<LLVMFea
          ("aarch64", "pacg") => Some(LLVMFeature::new("pauth")),
          ("aarch64", "pauth-lr") if get_version().0 < 19 => None,
          // Before LLVM 20 those two features were packaged together as b16b16
@@ -28,10 +28,10 @@ index f6598f9f..b2c78565 100644
  
  enum class LLVMRustResult { Success, Failure };
 diff --git a/compiler/rustc_llvm/llvm-wrapper/PassWrapper.cpp b/compiler/rustc_llvm/llvm-wrapper/PassWrapper.cpp
-index de14c6d1..78e04c1f 100644
+index a6b2384f..0bc639a4 100644
 --- a/compiler/rustc_llvm/llvm-wrapper/PassWrapper.cpp
 +++ b/compiler/rustc_llvm/llvm-wrapper/PassWrapper.cpp
-@@ -1620,7 +1620,7 @@ extern "C" void LLVMRustComputeLTOCacheKey(RustStringRef KeyOut,
+@@ -1632,7 +1632,7 @@ extern "C" void LLVMRustComputeLTOCacheKey(RustStringRef KeyOut,
    const auto &ExportList = Data->ExportLists.lookup(ModId);
    const auto &ResolvedODR = Data->ResolvedODR.lookup(ModId);
    const auto &DefinedGlobals = Data->ModuleToDefinedGVSummaries.lookup(ModId);
@@ -40,7 +40,7 @@ index de14c6d1..78e04c1f 100644
    DenseSet<GlobalValue::GUID> CfiFunctionDefs;
    DenseSet<GlobalValue::GUID> CfiFunctionDecls;
  #else
-@@ -1636,7 +1636,7 @@ extern "C" void LLVMRustComputeLTOCacheKey(RustStringRef KeyOut,
+@@ -1648,7 +1648,7 @@ extern "C" void LLVMRustComputeLTOCacheKey(RustStringRef KeyOut,
      CfiFunctionDecls.insert(
          GlobalValue::getGUID(GlobalValue::dropLLVMManglingEscape(Name)));
  

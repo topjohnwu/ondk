@@ -1,7 +1,7 @@
 # Copyright 2022-2025 Google LLC.
 # SPDX-License-Identifier: Apache-2.0
 
-RUST_VERSION='1.85.0'
+RUST_VERSION='1.86.0'
 
 NDK_VERSION='r29-beta1'
 NDK_DIR_VERSION=$NDK_VERSION
@@ -13,7 +13,7 @@ LLVM_SVN='547379'
 LLVM_ANDROID_VERSION='456a459bd653ddf1cca170e7e9aef9d122a81731'
 TOOLCHAIN_UTILS_VERSION='a1bb7f26cc6b735c3d685db12739bb03ad9a2993'
 
-OUTPUT_VERSION='r29.0'
+OUTPUT_VERSION='r29.1'
 
 PYTHON_CMD='python3'
 
@@ -63,8 +63,7 @@ git_clone_branch() {
 }
 
 skip_submodule() {
-  sed "s:.*submodule.*$1.*:&\n\tupdate = none:" .gitmodules > .gitmodules.p
-  mv .gitmodules.p .gitmodules
+  git config set -f .gitmodules "submodule.$1.update" none
 }
 
 clone_llvm() {
@@ -88,10 +87,9 @@ clone_rust() {
   cd src/rust
 
   # Skip unused submodules
-  skip_submodule llvm-project
-  skip_submodule enzyme
-  skip_submodule gcc
-  skip_submodule doc
+  skip_submodule src/llvm-project
+  skip_submodule src/gcc
+  skip_submodule src/tools/enzyme
 
   # Clone submodules
   git submodule update --init --depth=1
