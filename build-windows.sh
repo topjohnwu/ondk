@@ -20,17 +20,6 @@ DYN_EXT='dll'
 EXE_FMT='PE32+'
 PYTHON_CMD='python'
 
-clean_storage() {
-  # Clean up storage to fit in all our build output
-  rm -rf /c/SeleniumWebDrivers /c/selenium /c/Android /c/tools /c/Modules \
-    '/c/Program Files/PostgreSQL' '/c/Program Files/dotnet' \
-    "$JAVA_HOME_8_X64" "$JAVA_HOME_11_X64" "$JAVA_HOME_17_X64" \
-    "$GOROOT_1_15_X64" "$GOROOT_1_16_X64" "$GOROOT_1_17_X64" "$GOROOT_1_18_X64"
-
-  # Remove libzstd.dll.a to make sure zstd is statically linked
-  rm -f /ucrt64/lib/libzstd.dll.a
-}
-
 build() {
   set_llvm_cfg LLVM_USE_SYMLINKS TRUE
   # BUG: llvm.use-libcxx will not actually set LLVM_ENABLE_LIBCXX
@@ -99,9 +88,5 @@ ndk() {
 }
 
 export PATH='/c/Program Files/Git/cmd':$PATH
-
-if [ -n "$GITHUB_ACTION" ]; then
-  clean_storage
-fi
 
 parse_args $@

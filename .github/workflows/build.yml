@@ -21,6 +21,12 @@ jobs:
         with:
           python-version: "3.x"
 
+      - name: Clean up storage
+        run: |
+          rm -rf "$JAVA_HOME_8_X64" "$JAVA_HOME_11_X64" "$JAVA_HOME_17_X64" "$JAVA_HOME_21_X64" \
+            "$CHROMEWEBDRIVER" "$EDGEWEBDRIVER" "$GECKOWEBDRIVER" \
+            /usr/local/lib/android
+
       - name: Build toolchain
         run: |
           sudo apt-get update
@@ -63,6 +69,16 @@ jobs:
           update: true
           install: make diffutils tar patch unzip gzip
           pacboy: 7zip:p python:p cmake:p gcc:p ninja:p zstd:p clang:p lld:p libc++:p
+
+      - name: Clean up storage
+        run: |
+          rm -rf /c/SeleniumWebDrivers /c/selenium /c/Android /c/tools /c/Modules \
+            '/c/Program Files/PostgreSQL' '/c/Program Files/dotnet' \
+            "$JAVA_HOME_8_X64" "$JAVA_HOME_11_X64" "$JAVA_HOME_17_X64" "$JAVA_HOME_21_X64" \
+            "$GOROOT_1_15_X64" "$GOROOT_1_16_X64" "$GOROOT_1_17_X64" "$GOROOT_1_18_X64"
+
+          # Remove libzstd.dll.a to make sure zstd is statically linked
+          rm -f /ucrt64/lib/libzstd.dll.a
 
       - name: Build toolchain
         run: |
