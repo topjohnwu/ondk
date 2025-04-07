@@ -21,7 +21,8 @@ jobs:
 
       - name: Clean up storage
         run: |
-          rm -rf "$JAVA_HOME_8_X64" "$JAVA_HOME_11_X64" "$JAVA_HOME_17_X64" "$JAVA_HOME_21_X64" \
+          sudo rm -rf \
+            "$JAVA_HOME_8_X64" "$JAVA_HOME_11_X64" "$JAVA_HOME_17_X64" "$JAVA_HOME_21_X64" \
             "$CHROMEWEBDRIVER" "$EDGEWEBDRIVER" "$GECKOWEBDRIVER" \
             /usr/local/lib/android
 
