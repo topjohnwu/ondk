@@ -1,19 +1,19 @@
 # Copyright 2022-2025 Google LLC.
 # SPDX-License-Identifier: Apache-2.0
 
-RUST_VERSION='1.86.0'
+RUST_VERSION='1.87.0'
 
-NDK_VERSION='r29-beta1'
+NDK_VERSION='r28b'
 NDK_DIR_VERSION=$NDK_VERSION
 
 # These revisions are obtained from the NDK's LLVM manifest.xml
 # Update in sync with the NDK package
-LLVM_VERSION='b718bcaf8c198c82f3021447d943401e3ab5bd54'
-LLVM_SVN='547379'
-LLVM_ANDROID_VERSION='456a459bd653ddf1cca170e7e9aef9d122a81731'
-TOOLCHAIN_UTILS_VERSION='a1bb7f26cc6b735c3d685db12739bb03ad9a2993'
+LLVM_VERSION='97a699bf4812a18fb657c2779f5296a4ab2694d2'
+LLVM_SVN='530567'
+LLVM_ANDROID_VERSION='ab3ade05b26c45b59ac47b3779b7a6c999e6d634'
+TOOLCHAIN_UTILS_VERSION='dd1ee45a84cb07337f9d5d0a6769d9b865c6e620'
 
-OUTPUT_VERSION='r29.1'
+OUTPUT_VERSION='r28.4'
 
 PYTHON_CMD='python3'
 
@@ -95,9 +95,8 @@ clone_rust() {
   git submodule update --init --depth=1
 
   # Apply patches
-  for p in ../../patches/*.patch; do
-    patch -p1 < $p
-  done
+  patch -p1 < ../../patches/patch_llvm_build.patch
+  patch -p1 < ../../patches/support_ndk_llvm.patch
 
   # Link NDK LLVM into Rust's source
   rm -rf src/llvm-project
@@ -125,6 +124,12 @@ update_dir() {
       cp -af $s $d
     fi
   done
+}
+
+build() {
+  cd src/rust
+  eval $PYTHON_CMD ./x.py --config ../../bootstrap.toml --build $TRIPLE $(print_build_cfg) install
+  cd ../../
 }
 
 dl_ndk() {
@@ -161,8 +166,8 @@ run_cmd() {
       ;;
     build)
       rm -rf out/rust
-      # Set common LLVM configs
       set_llvm_cfg LLVM_VERSION_SUFFIX
+      config_build
       build
       ;;
     collect)

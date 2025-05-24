@@ -33,14 +33,10 @@ else
   EXE_FMT='ELF'
 fi
 
-build() {
+config_build() {
   if [ $OS = "darwin" ]; then
     export MACOSX_DEPLOYMENT_TARGET=11.0
-    # Manually set page size if cross compilation is required (arm64 require 16k page)
-    # export JEMALLOC_SYS_WITH_LG_PAGE=14
-
     set_llvm_cfg LLVM_BINUTILS_INCDIR $(brew --prefix)/opt/binutils/include
-    set_build_cfg rust.jemalloc true
   else
     set_llvm_cfg LLVM_BINUTILS_INCDIR /usr/include
     set_build_cfg llvm.static-libstdcpp true
@@ -48,10 +44,6 @@ build() {
   fi
 
   set_llvm_cfg LLVM_ENABLE_PLUGINS FORCE_ON
-
-  cd src/rust
-  eval python3 ./x.py --config ../../config.toml --host $TRIPLE $(print_build_cfg) install
-  cd ../../
 }
 
 collect() {

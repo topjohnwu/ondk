@@ -20,7 +20,7 @@ DYN_EXT='dll'
 EXE_FMT='PE32+'
 PYTHON_CMD='python'
 
-build() {
+config_build() {
   set_llvm_cfg LLVM_USE_SYMLINKS TRUE
   # BUG: llvm.use-libcxx will not actually set LLVM_ENABLE_LIBCXX
   set_llvm_cfg LLVM_ENABLE_LIBCXX TRUE
@@ -28,10 +28,6 @@ build() {
   set_build_cfg llvm.use-libcxx true
   set_build_cfg rust.use-lld true
   set_build_cfg dist.include-mingw-linker true
-
-  cd src/rust
-  eval python ./x.py --config ../../config.toml --build $TRIPLE $(print_build_cfg) install
-  cd ../../
 }
 
 collect() {
