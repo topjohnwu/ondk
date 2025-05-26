@@ -1,0 +1,27 @@
+diff --git a/compiler/rustc_llvm/llvm-wrapper/RustWrapper.cpp b/compiler/rustc_llvm/llvm-wrapper/RustWrapper.cpp
+index 90aa9188..f44ab406 100644
+--- a/compiler/rustc_llvm/llvm-wrapper/RustWrapper.cpp
++++ b/compiler/rustc_llvm/llvm-wrapper/RustWrapper.cpp
+@@ -1734,6 +1734,22 @@ extern "C" LLVMValueRef LLVMRustBuildMaxNum(LLVMBuilderRef B, LLVMValueRef LHS,
+   return wrap(unwrap(B)->CreateMaxNum(unwrap(LHS), unwrap(RHS)));
+ }
+ 
++enum {
++  LLVMGEPFlagInBounds = (1 << 0),
++  LLVMGEPFlagNUSW = (1 << 1),
++  LLVMGEPFlagNUW = (1 << 2),
++};
++extern "C" LLVMValueRef
++LLVMBuildGEPWithNoWrapFlags(LLVMBuilderRef B, LLVMTypeRef Ty,
++                            LLVMValueRef Pointer, LLVMValueRef *Indices,
++                            unsigned NumIndices, const char *Name,
++                            unsigned NoWrapFlags) {
++  if (NoWrapFlags & LLVMGEPFlagInBounds)
++    return LLVMBuildInBoundsGEP2(B, Ty, Pointer, Indices, NumIndices, Name);
++  else
++    return LLVMBuildGEP2(B, Ty, Pointer, Indices, NumIndices, Name);
++}
++
+ // Transfers ownership of DiagnosticHandler unique_ptr to the caller.
+ extern "C" DiagnosticHandler *
+ LLVMRustContextGetDiagnosticHandler(LLVMContextRef C) {

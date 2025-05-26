@@ -6,12 +6,13 @@ RUST_VERSION='1.87.0'
 NDK_VERSION='r28b'
 NDK_DIR_VERSION=$NDK_VERSION
 
-# These revisions are obtained from the NDK's LLVM manifest.xml
-# Update in sync with the NDK package
-LLVM_VERSION='97a699bf4812a18fb657c2779f5296a4ab2694d2'
-LLVM_SVN='530567'
-LLVM_ANDROID_VERSION='ab3ade05b26c45b59ac47b3779b7a6c999e6d634'
-TOOLCHAIN_UTILS_VERSION='dd1ee45a84cb07337f9d5d0a6769d9b865c6e620'
+# Android LLVM versions:
+# https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+/mirror-goog-main-llvm-toolchain-source/README.md
+# These revisions are obtained from the Android's LLVM manifest.xml
+LLVM_SVN='536225'
+LLVM_VERSION='b3a530ec6537146650e42be89f1089e9a3588460'
+LLVM_ANDROID_VERSION='43ef7af1325b43e13d926d74a89741d4ace5fcf8'
+TOOLCHAIN_UTILS_VERSION='760c253c1ed00ce9abd48f8546f08516e57485fe'
 
 OUTPUT_VERSION='r28.4'
 
@@ -96,7 +97,7 @@ clone_rust() {
 
   # Apply patches
   patch -p1 < ../../patches/patch_llvm_build.patch
-  patch -p1 < ../../patches/support_ndk_llvm.patch
+  # patch -p1 < ../../patches/support_ndk_llvm.patch
 
   # Link NDK LLVM into Rust's source
   rm -rf src/llvm-project
@@ -127,6 +128,8 @@ update_dir() {
 }
 
 build() {
+  set_llvm_cfg LLVM_VERSION_SUFFIX
+  config_build
   cd src/rust
   eval $PYTHON_CMD ./x.py --config ../../bootstrap.toml --build $TRIPLE $(print_build_cfg) install
   cd ../../
@@ -166,8 +169,6 @@ run_cmd() {
       ;;
     build)
       rm -rf out/rust
-      set_llvm_cfg LLVM_VERSION_SUFFIX
-      config_build
       build
       ;;
     collect)

@@ -1,60 +1,7 @@
-diff --git a/compiler/rustc_codegen_llvm/src/abi.rs b/compiler/rustc_codegen_llvm/src/abi.rs
-index 71059338..cea24eb1 100644
---- a/compiler/rustc_codegen_llvm/src/abi.rs
-+++ b/compiler/rustc_codegen_llvm/src/abi.rs
-@@ -437,7 +437,7 @@ fn apply_attrs_llfn(
- 
-         let apply_range_attr = |idx: AttributePlace, scalar: rustc_abi::Scalar| {
-             if cx.sess().opts.optimize != config::OptLevel::No
--                && llvm_util::get_version() >= (19, 0, 0)
-+                && (llvm_util::get_version() >= (19, 0, 0) && false)
-                 && matches!(scalar.primitive(), Primitive::Int(..))
-                 // If the value is a boolean, the range is 0..2 and that ultimately
-                 // become 0..0 when the type becomes i1, which would be rejected
-@@ -572,7 +572,7 @@ fn apply_attrs_callsite(&self, bx: &mut Builder<'_, 'll, 'tcx>, callsite: &'ll V
-             _ => {}
-         }
-         if bx.cx.sess().opts.optimize != config::OptLevel::No
--                && llvm_util::get_version() < (19, 0, 0)
-+                && (llvm_util::get_version() < (19, 0, 0) || true)
-                 && let BackendRepr::Scalar(scalar) = self.ret.layout.backend_repr
-                 && matches!(scalar.primitive(), Primitive::Int(..))
-                 // If the value is a boolean, the range is 0..2 and that ultimately
-diff --git a/compiler/rustc_codegen_llvm/src/context.rs b/compiler/rustc_codegen_llvm/src/context.rs
-index f7b096ff..c7f694bc 100644
---- a/compiler/rustc_codegen_llvm/src/context.rs
-+++ b/compiler/rustc_codegen_llvm/src/context.rs
-@@ -163,7 +163,7 @@ pub(crate) unsafe fn create_module<'ll>(
-     let mut target_data_layout = sess.target.data_layout.to_string();
-     let llvm_version = llvm_util::get_version();
- 
--    if llvm_version < (19, 0, 0) {
-+    if llvm_version < (19, 0, 0) || true {
-         if sess.target.arch == "aarch64" || sess.target.arch.starts_with("arm64") {
-             // LLVM 19 sets -Fn32 in its data layout string for 64-bit ARM
-             // Earlier LLVMs leave this default, so remove it.
 diff --git a/compiler/rustc_llvm/llvm-wrapper/RustWrapper.cpp b/compiler/rustc_llvm/llvm-wrapper/RustWrapper.cpp
-index 53df5993..5bdf5ddb 100644
+index 53df5993..753c7204 100644
 --- a/compiler/rustc_llvm/llvm-wrapper/RustWrapper.cpp
 +++ b/compiler/rustc_llvm/llvm-wrapper/RustWrapper.cpp
-@@ -467,7 +467,7 @@ extern "C" LLVMAttributeRef
- LLVMRustCreateRangeAttribute(LLVMContextRef C, unsigned NumBits,
-                              const uint64_t LowerWords[],
-                              const uint64_t UpperWords[]) {
--#if LLVM_VERSION_GE(19, 0)
-+#if LLVM_VERSION_GE(19, 0) && 0
-   return LLVMCreateConstantRangeAttribute(C, Attribute::Range, NumBits,
-                                           LowerWords, UpperWords);
- #else
-@@ -1594,7 +1594,7 @@ extern "C" LLVMValueRef LLVMRustBuildMemSet(LLVMBuilderRef B, LLVMValueRef Dst,
- // Polyfill for `LLVMBuildCallBr`, which was added in LLVM 19.
- // <https://github.com/llvm/llvm-project/commit/584253c4e2f788f870488fc32193b52d67ddaccc>
- // FIXME: Remove when Rust's minimum supported LLVM version reaches 19.
--#if LLVM_VERSION_LT(19, 0)
-+#if LLVM_VERSION_LT(19, 0) || 1
- DEFINE_SIMPLE_CONVERSION_FUNCTIONS(OperandBundleDef, LLVMOperandBundleRef)
- 
- extern "C" LLVMValueRef
 @@ -1771,7 +1771,7 @@ extern "C" LLVMValueRef LLVMRustBuildMaxNum(LLVMBuilderRef B, LLVMValueRef LHS,
    return wrap(unwrap(B)->CreateMaxNum(unwrap(LHS), unwrap(RHS)));
  }
@@ -64,12 +11,3 @@ index 53df5993..5bdf5ddb 100644
  enum {
    LLVMGEPFlagInBounds = (1 << 0),
    LLVMGEPFlagNUSW = (1 << 1),
-@@ -1856,7 +1856,7 @@ extern "C" void LLVMRustContextConfigureDiagnosticHandler(
-         }
-       }
-       if (DiagnosticHandlerCallback) {
--#if LLVM_VERSION_GE(19, 0)
-+#if LLVM_VERSION_GE(19, 0) && 0
-         DiagnosticHandlerCallback(&DI, DiagnosticHandlerContext);
- #else
-         DiagnosticHandlerCallback(DI, DiagnosticHandlerContext);
