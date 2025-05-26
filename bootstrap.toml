@@ -1,4 +1,4 @@
-change-id = 136941
+change-id = 138986
 
 [llvm]
 targets = "AArch64;ARM;X86;RISCV"
@@ -44,9 +44,11 @@ linker = "clang-19"
 
 [target.aarch64-apple-darwin]
 llvm-has-rust-patches = false
+jemalloc = true
 
 [target.x86_64-apple-darwin]
 llvm-has-rust-patches = false
+jemalloc = true
 
 [target.x86_64-pc-windows-gnu]
 llvm-has-rust-patches = false
