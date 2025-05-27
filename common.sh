@@ -97,7 +97,7 @@ clone_rust() {
 
   # Apply patches
   patch -p1 < ../../patches/patch_llvm_build.patch
-  # patch -p1 < ../../patches/support_ndk_llvm.patch
+  patch -p1 < ../../patches/support_ndk_llvm.patch
 
   # Link NDK LLVM into Rust's source
   rm -rf src/llvm-project
