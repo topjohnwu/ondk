@@ -22,8 +22,11 @@ PYTHON_CMD='python'
 
 config_build() {
   set_llvm_cfg LLVM_USE_SYMLINKS TRUE
+  set_llvm_cfg LLVM_USE_LINKER lld
   # BUG: llvm.use-libcxx will not actually set LLVM_ENABLE_LIBCXX
   set_llvm_cfg LLVM_ENABLE_LIBCXX TRUE
+  # BUG: latest LLVM shipped with MSYS2 cannot build with LTO
+  set_build_cfg llvm.thin-lto false
   # MinGW libstdc++ is incompatible with clang when LTO is enabled, we have to use libc++
   set_build_cfg llvm.use-libcxx true
   set_build_cfg rust.use-lld true
@@ -55,8 +58,8 @@ collect() {
 
 cp_sys_dlls() {
   local dir=$(dirname $1)
-  for lib in $(ldd $1 | grep ' /ucrt64/bin/' | awk '{ print $1 }'); do
-    cp -v /ucrt64/bin/$lib $dir
+  for lib in $(ldd $1 | grep ' /mingw64/bin/' | awk '{ print $1 }'); do
+    cp -v /mingw64/bin/$lib $dir
   done
 }
 

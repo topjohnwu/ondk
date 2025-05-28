@@ -44,7 +44,7 @@ jobs:
 
   windows:
     name: Build for Windows
-    runs-on: windows-latest
+    runs-on: windows-2025
     defaults:
       run:
         shell: msys2 {0}
@@ -57,7 +57,7 @@ jobs:
       - name: Setup MSYS2
         uses: msys2/setup-msys2@v2
         with:
-          msystem: UCRT64
+          msystem: MINGW64
           update: true
           install: make diffutils tar patch unzip gzip
           pacboy: 7zip:p python:p cmake:p gcc:p ninja:p zstd:p clang:p lld:p libc++:p
@@ -70,19 +70,16 @@ jobs:
             "$GOROOT_1_15_X64" "$GOROOT_1_16_X64" "$GOROOT_1_17_X64" "$GOROOT_1_18_X64"
 
           # Remove libzstd.dll.a to make sure zstd is statically linked
-          rm -f /ucrt64/lib/libzstd.dll.a
+          rm -f /mingw64/lib/libzstd.dll.a
 
       - name: Build toolchain
-        run: |
-          cp -r $GITHUB_WORKSPACE /c/ondk
-          cd /c/ondk
-          bash build-windows.sh
+        run: bash build-windows.sh
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: ondk-windows
-          path: C:\ondk\dist\*.tar.xz
+          path: dist\*.tar.xz
 
   macos-x64:
     name: Build for macOS (x64)
