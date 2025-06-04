@@ -135,6 +135,9 @@ build() {
   cd ../../
 }
 
+# Will be overriden in build-windows.sh
+build_lld() { return; }
+
 dl_ndk() {
   local NDK_ZIP="android-ndk-${NDK_VERSION}-${OS}.zip"
   local NDK_EXTRACT="android-ndk-${NDK_DIR_VERSION}"
@@ -170,6 +173,12 @@ run_cmd() {
     build)
       rm -rf out/rust
       build
+      rm -rf out/lld
+      build_lld
+      ;;
+    build-lld)
+      rm -rf out/lld
+      build_lld
       ;;
     collect)
       rm -rf out/collect

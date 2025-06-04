@@ -21,16 +21,30 @@ EXE_FMT='PE32+'
 PYTHON_CMD='python'
 
 config_build() {
-  set_llvm_cfg LLVM_USE_SYMLINKS TRUE
+  set_llvm_cfg LLVM_USE_SYMLINKS ON
   set_llvm_cfg LLVM_USE_LINKER lld
   # BUG: llvm.use-libcxx will not actually set LLVM_ENABLE_LIBCXX
-  set_llvm_cfg LLVM_ENABLE_LIBCXX TRUE
+  set_llvm_cfg LLVM_ENABLE_LIBCXX ON
   # BUG: latest LLVM shipped with MSYS2 cannot build with LTO
   set_build_cfg llvm.thin-lto false
   # MinGW libstdc++ is incompatible with clang when LTO is enabled, we have to use libc++
   set_build_cfg llvm.use-libcxx true
   set_build_cfg rust.use-lld true
   set_build_cfg dist.include-mingw-linker true
+}
+
+build_lld() {
+  mkdir -p out/lld/build
+  cd out/lld/build
+  cmake -G Ninja ../../../src/llvm-project/llvm \
+    -DCMAKE_INSTALL_PREFIX=../ -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS=lld \
+    -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DLLVM_USE_LINKER=lld \
+    -DLLVM_ENABLE_LIBCXX=ON -DLLVM_STATIC_LINK_CXX_STDLIB=ON \
+    -DLLVM_ENABLE_ZLIB=OFF -DLLVM_ENABLE_LIBXML2=OFF \
+    -DLLVM_BUILD_TOOLS=OFF -DLLVM_USE_SYMLINKS=ON -DLLVM_VERSION_SUFFIX='' \
+    -DLLVM_TARGETS_TO_BUILD="AArch64;ARM;X86;RISCV" \
+    -DCMAKE_EXE_LINKER_FLAGS="-s -static -static-libgcc"
+  cmake --build . --target install
 }
 
 collect() {
@@ -42,6 +56,8 @@ collect() {
   find . -name '*.old' -delete
   cp -af $RUST_BUILD/$TRIPLE/llvm/bin llvm-bin || true
   cp -an $RUST_BUILD/$TRIPLE/llvm/bin/. llvm-bin/.
+  cp -af ../lld/bin/. llvm-bin/. || true
+  cp -an ../lld/bin/. llvm-bin/.
   cp -af $RUST_BUILD/tmp/dist/lib/rustlib/. lib/rustlib/.
 
   local MINGW_DIR=lib/rustlib/$TRIPLE/bin/self-contained
@@ -80,6 +96,7 @@ ndk() {
 
   # Replace files with those from the rust toolchain
   touch $LLVM_DIR/bin/lld.exe
+  ln -sf lld.exe $LLVM_DIR/bin/ld.exe
   update_dir rust/llvm-bin $LLVM_DIR/bin
   rm -rf rust/llvm-bin
 

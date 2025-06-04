@@ -43,6 +43,7 @@ config_build() {
     set_build_cfg rust.use-lld true
   fi
 
+  set_build_cfg rust.lld true
   set_llvm_cfg LLVM_ENABLE_PLUGINS FORCE_ON
 }
 
