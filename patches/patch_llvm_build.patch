@@ -1,5 +1,5 @@
 diff --git a/src/bootstrap/src/core/build_steps/llvm.rs b/src/bootstrap/src/core/build_steps/llvm.rs
-index e21804fa..83aef34e 100644
+index e21804fa..7d361ca5 100644
 --- a/src/bootstrap/src/core/build_steps/llvm.rs
 +++ b/src/bootstrap/src/core/build_steps/llvm.rs
 @@ -296,7 +296,7 @@ fn run(self, builder: &Builder<'_>) -> LlvmResult {
@@ -11,7 +11,19 @@ index e21804fa..83aef34e 100644
              panic!("shared linking to LLVM is not currently supported on {}", target.triple);
          }
  
-@@ -556,7 +556,7 @@ fn run(self, builder: &Builder<'_>) -> LlvmResult {
+@@ -451,6 +451,11 @@ fn run(self, builder: &Builder<'_>) -> LlvmResult {
+             enabled_llvm_projects.push("clang");
+         }
+
++        if !target.is_windows() {
++            // We build LLD separately on Windows
++            enabled_llvm_projects.push("lld");
++        }
++
+         // We want libxml to be disabled.
+         // See https://github.com/rust-lang/rust/pull/50104
+         cfg.define("LLVM_ENABLE_LIBXML2", "OFF");
+@@ -556,7 +561,7 @@ fn run(self, builder: &Builder<'_>) -> LlvmResult {
          // link to make llvm-config happy.
          if builder.llvm_link_shared() && target.contains("apple-darwin") {
              let lib_name = find_llvm_lib_name("dylib");

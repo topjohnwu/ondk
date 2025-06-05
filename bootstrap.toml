@@ -33,6 +33,7 @@ sysconfdir = "etc"
 channel = "nightly"
 lto = "thin"
 strip = true
+lld = false
 codegen-units = 1
 
 [target.x86_64-unknown-linux-gnu]
