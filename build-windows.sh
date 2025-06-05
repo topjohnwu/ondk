@@ -45,6 +45,7 @@ build_lld() {
     -DLLVM_TARGETS_TO_BUILD="AArch64;ARM;X86;RISCV" \
     -DCMAKE_EXE_LINKER_FLAGS="-s -static -static-libgcc"
   cmake --build . --target install
+  cd ../../../
 }
 
 collect() {
