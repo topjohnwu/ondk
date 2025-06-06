@@ -1,15 +1,8 @@
 change-id = 138986
 
 [llvm]
-targets = "AArch64;ARM;X86;RISCV"
-experimental-targets = ""
-clang = true
 download-ci-llvm = false
 link-shared = true
-thin-lto = true
-version-suffix = ""
-ldflags = "-s"
-libzstd = true
 
 [build]
 docs = false
@@ -37,21 +30,21 @@ lld = false
 codegen-units = 1
 
 [target.x86_64-unknown-linux-gnu]
-llvm-has-rust-patches = false
+llvm-config = "../../out/llvm/bin/llvm-config"
 cc = "clang-19"
 cxx = "clang++-19"
 linker = "clang-19"
 
 [target.aarch64-apple-darwin]
-llvm-has-rust-patches = false
+llvm-config = "../../out/llvm/bin/llvm-config"
 jemalloc = true
 
 [target.x86_64-apple-darwin]
-llvm-has-rust-patches = false
+llvm-config = "../../out/llvm/bin/llvm-config"
 jemalloc = true
 
 [target.x86_64-pc-windows-gnu]
-llvm-has-rust-patches = false
+llvm-config = "../../out/llvm/bin/llvm-config.exe"
 cc = "clang"
 cxx = "clang++"
 linker = "clang"

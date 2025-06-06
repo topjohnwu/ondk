@@ -23,20 +23,17 @@ shopt -s nullglob
 
 # key value
 set_llvm_cfg() {
+  local cfg="\"-D${1}=$2\""
   if [ -z "$LLVM_BUILD_CFG" ]; then
-    LLVM_BUILD_CFG="\"$1\" = \"$2\""
+    LLVM_BUILD_CFG="$cfg"
   else
-    LLVM_BUILD_CFG="$LLVM_BUILD_CFG, \"$1\" = \"$2\""
+    LLVM_BUILD_CFG="$LLVM_BUILD_CFG $cfg"
   fi
 }
 
 # key value
 set_build_cfg() {
   RUST_CFG="$RUST_CFG '--set=$1=$2'"
-}
-
-print_build_cfg() {
-  echo $RUST_CFG "'--set=llvm.build-config={ $LLVM_BUILD_CFG }'"
 }
 
 strip_exe() {
@@ -96,7 +93,6 @@ clone_rust() {
   git submodule update --init --depth=1
 
   # Apply patches
-  patch -p1 < ../../patches/patch_llvm_build.patch
   patch -p1 < ../../patches/support_ndk_llvm.patch
 
   # Link NDK LLVM into Rust's source
@@ -127,16 +123,37 @@ update_dir() {
   done
 }
 
-build() {
+common_config_llvm() {
+  set_llvm_cfg CMAKE_BUILD_TYPE Release
+  set_llvm_cfg CMAKE_INSTALL_PREFIX ../
+  set_llvm_cfg LLVM_TARGETS_TO_BUILD "AArch64;ARM;X86;RISCV"
   set_llvm_cfg LLVM_VERSION_SUFFIX
-  config_build
-  cd src/rust
-  eval $PYTHON_CMD ./x.py --config ../../bootstrap.toml --build $TRIPLE $(print_build_cfg) install
-  cd ../../
+  set_llvm_cfg LLVM_TARGET_ARCH $ARCH
+  set_llvm_cfg LLVM_DEFAULT_TARGET_TRIPLE $TRIPLE
+  set_llvm_cfg LLVM_ENABLE_ZLIB OFF
+  set_llvm_cfg LLVM_ENABLE_LIBXML2 OFF
+  set_llvm_cfg LLVM_ENABLE_ZSTD FORCE_ON
+  set_llvm_cfg LLVM_USE_STATIC_ZSTD ON
+  set_llvm_cfg LLVM_INCLUDE_TESTS OFF
+  set_llvm_cfg LLVM_ENABLE_LIBEDIT OFF
+  set_llvm_cfg LLVM_ENABLE_BINDINGS OFF
+  set_llvm_cfg LLVM_ENABLE_Z3_SOLVER OFF
+  set_llvm_cfg LLVM_ENABLE_ASSERTIONS OFF
+  set_llvm_cfg LLVM_UNREACHABLE_OPTIMIZE OFF
+  set_llvm_cfg LLVM_INCLUDE_EXAMPLES OFF
+  set_llvm_cfg LLVM_INCLUDE_DOCS OFF
+  set_llvm_cfg LLVM_INCLUDE_BENCHMARKS OFF
+  set_llvm_cfg LLVM_ENABLE_WARNINGS OFF
+  set_llvm_cfg LLVM_INSTALL_UTILS ON
 }
 
-# Will be overriden in build-windows.sh
-build_lld() { return; }
+build_rust() {
+  rm -rf out/rust
+  config_rust_build
+  cd src/rust
+  eval $PYTHON_CMD ./x.py --config ../../bootstrap.toml --build $TRIPLE $RUST_CFG install
+  cd ../../
+}
 
 dl_ndk() {
   local NDK_ZIP="android-ndk-${NDK_VERSION}-${OS}.zip"
@@ -171,14 +188,14 @@ run_cmd() {
       clone_rust
       ;;
     build)
-      rm -rf out/rust
-      build
-      rm -rf out/lld
-      build_lld
+      build_llvm
+      build_rust
       ;;
-    build-lld)
-      rm -rf out/lld
-      build_lld
+    build-llvm)
+      build_llvm
+      ;;
+    build-rust)
+      build_rust
       ;;
     collect)
       rm -rf out/collect

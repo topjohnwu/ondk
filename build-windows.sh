@@ -15,37 +15,65 @@ export MSYS=winsymlinks:nativestrict
 
 OS='windows'
 NDK_DIRNAME='windows-x86_64'
+ARCH='x86_64'
 TRIPLE='x86_64-pc-windows-gnu'
 DYN_EXT='dll'
 EXE_FMT='PE32+'
 PYTHON_CMD='python'
 
-config_build() {
-  set_llvm_cfg LLVM_USE_SYMLINKS ON
-  set_llvm_cfg LLVM_USE_LINKER lld
-  # BUG: llvm.use-libcxx will not actually set LLVM_ENABLE_LIBCXX
-  set_llvm_cfg LLVM_ENABLE_LIBCXX ON
-  # BUG: latest LLVM shipped with MSYS2 cannot build with LTO
-  set_build_cfg llvm.thin-lto false
+config_rust_build() {
   # MinGW libstdc++ is incompatible with clang when LTO is enabled, we have to use libc++
   set_build_cfg llvm.use-libcxx true
   set_build_cfg rust.use-lld true
   set_build_cfg dist.include-mingw-linker true
+
+  # Expose all LLVM dlls to stage1 rustc
+  mkdir -p out/llvm/dlls
+  cp -af out/llvm/bin/*.dll out/llvm/dlls
+  export PATH="$(realpath out/llvm/dlls):$PATH"
+}
+
+config_llvm() {
+  unset LLVM_BUILD_CFG
+  common_config_llvm
+  set_llvm_cfg CMAKE_C_COMPILER clang
+  set_llvm_cfg CMAKE_CXX_COMPILER clang++
+  set_llvm_cfg LLVM_USE_LINKER lld
+  set_llvm_cfg LLVM_ENABLE_LIBCXX ON
+  set_llvm_cfg LLVM_STATIC_LINK_CXX_STDLIB ON
+  set_llvm_cfg LLVM_USE_SYMLINKS ON
 }
 
 build_lld() {
   mkdir -p out/lld/build
   cd out/lld/build
-  cmake -G Ninja ../../../src/llvm-project/llvm \
-    -DCMAKE_INSTALL_PREFIX=../ -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS=lld \
-    -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DLLVM_USE_LINKER=lld \
-    -DLLVM_ENABLE_LIBCXX=ON -DLLVM_STATIC_LINK_CXX_STDLIB=ON \
-    -DLLVM_ENABLE_ZLIB=OFF -DLLVM_ENABLE_LIBXML2=OFF \
-    -DLLVM_BUILD_TOOLS=OFF -DLLVM_USE_SYMLINKS=ON -DLLVM_VERSION_SUFFIX='' \
-    -DLLVM_TARGETS_TO_BUILD="AArch64;ARM;X86;RISCV" \
-    -DCMAKE_EXE_LINKER_FLAGS="-s -static -static-libgcc"
+
+  config_llvm
+  set_llvm_cfg LLVM_ENABLE_PROJECTS lld
+  set_llvm_cfg LLVM_BUILD_TOOLS OFF
+  set_llvm_cfg CMAKE_EXE_LINKER_FLAGS "-s -static -static-libgcc"
+
+  eval cmake -G Ninja ../../../src/llvm-project/llvm $LLVM_BUILD_CFG
   cmake --build . --target install
   cd ../../../
+}
+
+build_llvm() {
+  mkdir -p out/llvm/build
+  cd out/llvm/build
+
+  config_llvm
+  set_llvm_cfg LLVM_ENABLE_PROJECTS clang
+  set_llvm_cfg LLVM_LINK_LLVM_DYLIB ON
+  # BUG: latest LLVM shipped with MSYS2 cannot build with LTO
+  # set_llvm_cfg LLVM_ENABLE_LTO Thin
+
+  eval cmake -G Ninja ../../../src/llvm-project/llvm $LLVM_BUILD_CFG
+  cmake --build . --target install
+  cd ../../../
+
+  # We have to build LLD statically to prevent flakiness
+  build_lld
 }
 
 collect() {
@@ -55,8 +83,8 @@ collect() {
   local RUST_BUILD=../../src/rust/build
 
   find . -name '*.old' -delete
-  cp -af $RUST_BUILD/$TRIPLE/llvm/bin llvm-bin || true
-  cp -an $RUST_BUILD/$TRIPLE/llvm/bin/. llvm-bin/.
+  cp -af ../llvm/bin llvm-bin || true
+  cp -an ../llvm/bin/. llvm-bin/.
   cp -af ../lld/bin/. llvm-bin/. || true
   cp -an ../lld/bin/. llvm-bin/.
   cp -af $RUST_BUILD/tmp/dist/lib/rustlib/. lib/rustlib/.
@@ -69,7 +97,7 @@ collect() {
   cp_sys_dlls $MINGW_DIR/ld.exe
   cp_sys_dlls $MINGW_DIR/x86_64-w64-mingw32-gcc.exe
 
-  strip_exe $RUST_BUILD/$TRIPLE/llvm/bin/llvm-strip.exe
+  strip_exe ../llvm/bin/llvm-strip.exe
   cd ../../
 }
 
@@ -104,6 +132,6 @@ ndk() {
   cd ../../../
 }
 
-export PATH='/c/Program Files/Git/cmd':$PATH
+export PATH="$PATH:/c/Program Files/Git/cmd"
 
 parse_args $@

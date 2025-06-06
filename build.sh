@@ -25,6 +25,7 @@ if [ $OS = "darwin" ]; then
   EXE_FMT='Mach-O'
   # Always use GNU patch
   export PATH="$(brew --prefix)/opt/gpatch/bin:$PATH"
+  export MACOSX_DEPLOYMENT_TARGET=11.0
 else
   NDK_DIRNAME='linux-x86_64'
   TRIPLE="${ARCH}-unknown-linux-gnu"
@@ -33,28 +34,48 @@ else
   EXE_FMT='ELF'
 fi
 
-config_build() {
+config_rust_build() {
   if [ $OS = "darwin" ]; then
-    export MACOSX_DEPLOYMENT_TARGET=11.0
+    export DYLD_FALLBACK_LIBRARY_PATH="$(realpath out/llvm/lib)"
+  else
+    set_build_cfg rust.use-lld true
+    export LD_LIBRARY_PATH="$(realpath out/llvm/lib)"
+  fi
+}
+
+build_llvm() {
+  mkdir -p out/llvm/build
+  cd out/llvm/build
+
+  common_config_llvm
+
+  if [ $OS = "darwin" ]; then
     set_llvm_cfg LLVM_BINUTILS_INCDIR $(brew --prefix)/opt/binutils/include
   else
     set_llvm_cfg LLVM_BINUTILS_INCDIR /usr/include
-    set_build_cfg llvm.static-libstdcpp true
-    set_build_cfg rust.use-lld true
+    set_llvm_cfg CMAKE_C_COMPILER clang-19
+    set_llvm_cfg CMAKE_CXX_COMPILER clang++-19
+    set_llvm_cfg LLVM_USE_LINKER lld
+    set_llvm_cfg LLVM_STATIC_LINK_CXX_STDLIB ON
   fi
 
+  set_llvm_cfg LLVM_ENABLE_PROJECTS "clang;lld"
+  set_llvm_cfg LLVM_ENABLE_LTO Thin
   set_llvm_cfg LLVM_ENABLE_PLUGINS FORCE_ON
+  set_llvm_cfg LLVM_LINK_LLVM_DYLIB ON
+
+  eval cmake -G Ninja ../../../src/llvm-project/llvm $LLVM_BUILD_CFG
+  cmake --build . --target install
+  cd ../../../
 }
 
 collect() {
   cp -af out/rust out/collect
   cd out/collect
 
-  local RUST_BUILD=../../src/rust/build
-
   find . -name '*.old' -delete
-  cp -af $RUST_BUILD/$TRIPLE/llvm/bin llvm-bin
-  find $RUST_BUILD/$TRIPLE/llvm/lib -name "*.${DYN_EXT}*" -exec cp -an {} lib \;
+  cp -af ../llvm/bin llvm-bin
+  find ../llvm/lib -name "*.${DYN_EXT}*" -exec cp -an {} lib \;
   strip_exe llvm-bin/llvm-strip
   cd ../../
 }
