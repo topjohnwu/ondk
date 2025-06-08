@@ -37,9 +37,11 @@ set_build_cfg() {
 }
 
 strip_exe() {
-  $1 -s $(find bin -type f -exec sh -c "file {} | grep -q $EXE_FMT" \; -print)
-  $1 -s $(find llvm-bin -type f -exec sh -c "file {} | grep -q $EXE_FMT" \; -print)
-  $1 -s $(find lib -maxdepth 1 -type f -exec sh -c "file {} | grep -q $EXE_FMT" \; -print)
+  for path in bin llvm-bin lib; do
+    find $path -maxdepth 1 -type f \
+      -exec sh -c "file {} | grep -q $EXE_FMT" \; \
+      -exec ../llvm/bin/llvm-strip -s {} \;
+  done
 }
 
 # url sha

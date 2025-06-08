@@ -76,7 +76,7 @@ collect() {
   find . -name '*.old' -delete
   cp -af ../llvm/bin llvm-bin
   find ../llvm/lib -name "*.${DYN_EXT}*" -exec cp -an {} lib \;
-  strip_exe llvm-bin/llvm-strip
+  strip_exe
   cd ../../
 }
 

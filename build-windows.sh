@@ -97,7 +97,7 @@ collect() {
   cp_sys_dlls $MINGW_DIR/ld.exe
   cp_sys_dlls $MINGW_DIR/x86_64-w64-mingw32-gcc.exe
 
-  strip_exe ../llvm/bin/llvm-strip.exe
+  strip_exe
   cd ../../
 }
 
