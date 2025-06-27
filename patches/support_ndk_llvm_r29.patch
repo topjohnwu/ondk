@@ -1,0 +1,36 @@
+diff --git a/compiler/rustc_llvm/llvm-wrapper/LLVMWrapper.h b/compiler/rustc_llvm/llvm-wrapper/LLVMWrapper.h
+index f6598f9f..3fc79f47 100644
+--- a/compiler/rustc_llvm/llvm-wrapper/LLVMWrapper.h
++++ b/compiler/rustc_llvm/llvm-wrapper/LLVMWrapper.h
+@@ -14,6 +14,9 @@
+ 
+ #define LLVM_VERSION_LT(major, minor) (!LLVM_VERSION_GE((major), (minor)))
+ 
++#undef LLVM_VERSION_MAJOR
++#define LLVM_VERSION_MAJOR 20
++
+ extern "C" void LLVMRustSetLastError(const char *);
+ 
+ enum class LLVMRustResult { Success, Failure };
+diff --git a/compiler/rustc_llvm/llvm-wrapper/RustWrapper.cpp b/compiler/rustc_llvm/llvm-wrapper/RustWrapper.cpp
+index 72369ab7..ecaf0477 100644
+--- a/compiler/rustc_llvm/llvm-wrapper/RustWrapper.cpp
++++ b/compiler/rustc_llvm/llvm-wrapper/RustWrapper.cpp
+@@ -296,7 +296,7 @@ static Attribute::AttrKind fromRust(LLVMRustAttributeKind Kind) {
+   case LLVMRustAttributeKind::NoAlias:
+     return Attribute::NoAlias;
+   case LLVMRustAttributeKind::NoCapture:
+-#if LLVM_VERSION_GE(21, 0)
++#if LLVM_VERSION_GE(21, 0) || 1
+     report_fatal_error("NoCapture doesn't exist in LLVM 21");
+ #else
+     return Attribute::NoCapture;
+@@ -418,7 +418,7 @@ extern "C" void LLVMRustEraseInstFromParent(LLVMValueRef Instr) {
+ 
+ extern "C" LLVMAttributeRef
+ LLVMRustCreateAttrNoValue(LLVMContextRef C, LLVMRustAttributeKind RustAttr) {
+-#if LLVM_VERSION_GE(21, 0)
++#if LLVM_VERSION_GE(21, 0) || 1
+   // LLVM 21 replaced the NoCapture attribute with Captures(none).
+   if (RustAttr == LLVMRustAttributeKind::NoCapture) {
+     return wrap(Attribute::getWithCaptureInfo(*unwrap(C), CaptureInfo::none()));

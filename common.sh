@@ -3,18 +3,18 @@
 
 RUST_VERSION='1.88.0'
 
-NDK_VERSION='r28b'
+NDK_VERSION='r29-beta2'
 NDK_DIR_VERSION=$NDK_VERSION
 
 # Android LLVM versions:
 # https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+/mirror-goog-main-llvm-toolchain-source/README.md
 # These revisions are obtained from the Android's LLVM manifest.xml
-LLVM_SVN='536225'
-LLVM_VERSION='b3a530ec6537146650e42be89f1089e9a3588460'
-LLVM_ANDROID_VERSION='43ef7af1325b43e13d926d74a89741d4ace5fcf8'
-TOOLCHAIN_UTILS_VERSION='760c253c1ed00ce9abd48f8546f08516e57485fe'
+LLVM_SVN='563880'
+LLVM_VERSION='5e96669f06077099aa41290cdb4c5e6fa0f59349'
+LLVM_ANDROID_VERSION='5e542acfb90017b4c61238e3ae3e9df2415d14a2'
+TOOLCHAIN_UTILS_VERSION='987e85a3529fe6be878ce391e5708f465e86451f'
 
-OUTPUT_VERSION='r28.5'
+OUTPUT_VERSION='r29.2'
 
 PYTHON_CMD='python3'
 
@@ -95,7 +95,7 @@ clone_rust() {
   git submodule update --init --depth=1
 
   # Apply patches
-  patch -p1 < ../../patches/support_ndk_llvm.patch
+  patch -p1 < ../../patches/support_ndk_llvm_r29.patch
 
   # Link NDK LLVM into Rust's source
   rm -rf src/llvm-project
