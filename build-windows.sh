@@ -28,6 +28,7 @@ config_rust_build() {
   set_build_cfg dist.include-mingw-linker true
 
   # Expose all LLVM dlls to stage1 rustc
+  rm -rf out/llvm/dlls
   mkdir -p out/llvm/dlls
   cp -af out/llvm/bin/*.dll out/llvm/dlls
   export PATH="$(realpath out/llvm/dlls):$PATH"
@@ -40,7 +41,7 @@ config_llvm() {
   set_llvm_cfg CMAKE_CXX_COMPILER clang++
   set_llvm_cfg LLVM_USE_LINKER lld
   set_llvm_cfg LLVM_ENABLE_LIBCXX ON
-  set_llvm_cfg LLVM_STATIC_LINK_CXX_STDLIB ON
+  set_llvm_cfg LLVM_ENABLE_PLUGINS OFF
   set_llvm_cfg LLVM_USE_SYMLINKS ON
 }
 
@@ -83,6 +84,7 @@ collect() {
   local RUST_BUILD=../../src/rust/build
 
   find . -name '*.old' -delete
+  cp -af ../llvm/bin/libLLVM*.dll bin
   cp -af ../llvm/bin llvm-bin || true
   cp -an ../llvm/bin/. llvm-bin/.
   cp -af ../lld/bin/. llvm-bin/. || true
