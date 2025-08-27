@@ -1,20 +1,20 @@
 # Copyright 2022-2025 Google LLC.
 # SPDX-License-Identifier: Apache-2.0
 
-RUST_VERSION='1.88.0'
+RUST_VERSION='1.89.0'
 
-NDK_VERSION='r28b'
+NDK_VERSION='r29-beta3'
 NDK_DIR_VERSION=$NDK_VERSION
 
 # Android LLVM versions:
 # https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+/mirror-goog-main-llvm-toolchain-source/README.md
 # These revisions are obtained from the Android's LLVM manifest.xml
-LLVM_SVN='536225'
-LLVM_VERSION='b3a530ec6537146650e42be89f1089e9a3588460'
-LLVM_ANDROID_VERSION='43ef7af1325b43e13d926d74a89741d4ace5fcf8'
-TOOLCHAIN_UTILS_VERSION='760c253c1ed00ce9abd48f8546f08516e57485fe'
+LLVM_SVN='563880'
+LLVM_VERSION='5e96669f06077099aa41290cdb4c5e6fa0f59349'
+LLVM_ANDROID_VERSION='0d60a8c3cafd4371270eab5a50a9f753606810ba'
+TOOLCHAIN_UTILS_VERSION='e4ed541c00706c0108c57921ac4b95ca98e87ec5'
 
-OUTPUT_VERSION='r28.5'
+OUTPUT_VERSION='r28.6'
 
 PYTHON_CMD='python3'
 
@@ -74,7 +74,7 @@ clone_llvm() {
   git_clone_sha https://android.googlesource.com/platform/external/toolchain-utils $TOOLCHAIN_UTILS_VERSION
 
   # Patch the LLVM source code
-  $PYTHON_CMD src/toolchain-utils/llvm_tools/patch_manager.py \
+  $PYTHON_CMD src/toolchain-utils/py/bin/llvm_tools/patch_manager.py \
     --svn_version $LLVM_SVN \
     --patch_metadata_file src/llvm_android/patches/PATCHES.json \
     --src_path src/llvm-project
@@ -95,7 +95,7 @@ clone_rust() {
   git submodule update --init --depth=1
 
   # Apply patches
-  patch -p1 < ../../patches/support_ndk_llvm_r28.patch
+  patch -p1 < ../../patches/support_ndk_llvm_r29.patch
 
   # Link NDK LLVM into Rust's source
   rm -rf src/llvm-project

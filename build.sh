@@ -24,7 +24,7 @@ if [ $OS = "darwin" ]; then
   DYN_EXT='dylib'
   EXE_FMT='Mach-O'
   # Always use GNU patch
-  export PATH="$(brew --prefix)/opt/gpatch/bin:$PATH"
+  export PATH="$(brew --prefix)/opt/gpatch/libexec/gnubin:$PATH"
   export MACOSX_DEPLOYMENT_TARGET=11.0
 else
   NDK_DIRNAME='linux-x86_64'
