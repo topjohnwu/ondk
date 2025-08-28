@@ -9,8 +9,6 @@ if ! uname | grep -q 'MINGW64_NT'; then
   exit 1
 fi
 
-export MSYS=winsymlinks:nativestrict
-
 . common.sh
 
 OS='windows'
@@ -134,6 +132,10 @@ ndk() {
   cd ../../../
 }
 
+export MSYS=winsymlinks:nativestrict
 export PATH="$PATH:/c/Program Files/Git/cmd"
+
+# Enable symlink support for git
+git config --global core.symlinks true
 
 parse_args $@
