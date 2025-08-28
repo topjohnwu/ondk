@@ -16,8 +16,6 @@ TOOLCHAIN_UTILS_VERSION='e4ed541c00706c0108c57921ac4b95ca98e87ec5'
 
 OUTPUT_VERSION='r28.6'
 
-PYTHON_CMD='python3'
-
 set -e
 shopt -s nullglob
 
@@ -74,7 +72,7 @@ clone_llvm() {
   git_clone_sha https://android.googlesource.com/platform/external/toolchain-utils $TOOLCHAIN_UTILS_VERSION
 
   # Patch the LLVM source code
-  $PYTHON_CMD src/toolchain-utils/py/bin/llvm_tools/patch_manager.py \
+  python3 src/toolchain-utils/py/bin/llvm_tools/patch_manager.py \
     --svn_version $LLVM_SVN \
     --patch_metadata_file src/llvm_android/patches/PATCHES.json \
     --src_path src/llvm-project

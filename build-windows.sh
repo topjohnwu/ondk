@@ -17,7 +17,6 @@ ARCH='x86_64'
 TRIPLE='x86_64-pc-windows-gnu'
 DYN_EXT='dll'
 EXE_FMT='PE32+'
-PYTHON_CMD='python'
 
 config_rust_build() {
   # MinGW libstdc++ is incompatible with clang when LTO is enabled, we have to use libc++
