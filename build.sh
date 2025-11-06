@@ -39,6 +39,7 @@ config_rust_build() {
     export DYLD_FALLBACK_LIBRARY_PATH="$(realpath out/llvm/lib)"
   else
     set_build_cfg rust.use-lld true
+    set_build_cfg llvm.use-libcxx true
     export LD_LIBRARY_PATH="$(realpath out/llvm/lib)"
   fi
 }
@@ -53,10 +54,11 @@ build_llvm() {
     set_llvm_cfg LLVM_BINUTILS_INCDIR $(brew --prefix)/opt/binutils/include
   else
     set_llvm_cfg LLVM_BINUTILS_INCDIR /usr/include
-    set_llvm_cfg CMAKE_C_COMPILER clang-19
-    set_llvm_cfg CMAKE_CXX_COMPILER clang++-19
+    set_llvm_cfg CMAKE_C_COMPILER clang-20
+    set_llvm_cfg CMAKE_CXX_COMPILER clang++-20
     set_llvm_cfg LLVM_USE_LINKER lld
     set_llvm_cfg LLVM_STATIC_LINK_CXX_STDLIB ON
+    set_llvm_cfg LLVM_ENABLE_LIBCXX ON
   fi
 
   set_llvm_cfg LLVM_ENABLE_PROJECTS "clang;lld"

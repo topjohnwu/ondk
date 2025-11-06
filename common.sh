@@ -1,9 +1,9 @@
 # Copyright 2022-2025 Google LLC.
 # SPDX-License-Identifier: Apache-2.0
 
-RUST_VERSION='1.89.0'
+RUST_VERSION='1.91.0'
 
-NDK_VERSION='r29-beta3'
+NDK_VERSION='r29'
 NDK_DIR_VERSION=$NDK_VERSION
 
 # Android LLVM versions:
@@ -11,10 +11,10 @@ NDK_DIR_VERSION=$NDK_VERSION
 # These revisions are obtained from the Android's LLVM manifest.xml
 LLVM_SVN='563880'
 LLVM_VERSION='5e96669f06077099aa41290cdb4c5e6fa0f59349'
-LLVM_ANDROID_VERSION='0d60a8c3cafd4371270eab5a50a9f753606810ba'
+LLVM_ANDROID_VERSION='38546691df970516709cc907bc7387004f69c60c'
 TOOLCHAIN_UTILS_VERSION='e4ed541c00706c0108c57921ac4b95ca98e87ec5'
 
-OUTPUT_VERSION='r29.2'
+OUTPUT_VERSION='r29.3'
 
 set -e
 shopt -s nullglob
@@ -151,7 +151,7 @@ build_rust() {
   rm -rf out/rust
   config_rust_build
   cd src/rust
-  eval $PYTHON_CMD ./x.py --config ../../bootstrap.toml --build $TRIPLE $RUST_CFG install
+  eval python3 ./x.py --config ../../bootstrap.toml --build $TRIPLE $RUST_CFG install
   cd ../../
 }
 

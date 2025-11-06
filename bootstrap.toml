@@ -1,4 +1,4 @@
-change-id = 142379
+change-id = 146435
 
 [llvm]
 download-ci-llvm = false
@@ -31,9 +31,9 @@ codegen-units = 1
 
 [target.x86_64-unknown-linux-gnu]
 llvm-config = "../../out/llvm/bin/llvm-config"
-cc = "clang-19"
-cxx = "clang++-19"
-linker = "clang-19"
+cc = "clang-20"
+cxx = "clang++-20"
+linker = "clang-20"
 
 [target.aarch64-apple-darwin]
 llvm-config = "../../out/llvm/bin/llvm-config"
