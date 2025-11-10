@@ -35,6 +35,8 @@ else
 fi
 
 config_rust_build() {
+  unset RUST_CFG
+
   if [ $OS = "darwin" ]; then
     export DYLD_FALLBACK_LIBRARY_PATH="$(realpath out/llvm/lib)"
   else

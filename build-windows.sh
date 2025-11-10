@@ -19,6 +19,8 @@ DYN_EXT='dll'
 EXE_FMT='PE32+'
 
 config_rust_build() {
+  unset RUST_CFG
+
   # MinGW libstdc++ is incompatible with clang when LTO is enabled, we have to use libc++
   set_build_cfg llvm.use-libcxx true
   set_build_cfg rust.use-lld true
@@ -32,7 +34,6 @@ config_rust_build() {
 }
 
 config_llvm() {
-  unset LLVM_BUILD_CFG
   common_config_llvm
   set_llvm_cfg CMAKE_C_COMPILER clang
   set_llvm_cfg CMAKE_CXX_COMPILER clang++

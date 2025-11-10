@@ -124,6 +124,7 @@ update_dir() {
 }
 
 common_config_llvm() {
+  unset LLVM_BUILD_CFG
   set_llvm_cfg CMAKE_BUILD_TYPE Release
   set_llvm_cfg CMAKE_INSTALL_PREFIX ../
   set_llvm_cfg LLVM_TARGETS_TO_BUILD "AArch64;ARM;X86;RISCV"
