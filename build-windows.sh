@@ -75,10 +75,21 @@ build_llvm() {
 }
 
 collect() {
-  cp -af out/rust out/collect
-  cd out/collect
+  # Build rust-mingw
+  config_rust_build
+  cd src/rust
+  eval python3 ./x.py --config ../../bootstrap.toml --build $TRIPLE $RUST_CFG dist rust-mingw
+  cd ../../
 
-  local RUST_BUILD=../../src/rust/build
+  # Copy sysroot
+  cp -af out/rust out/collect
+
+  # Install rust-mingw
+  tar xvf src/rust/build/dist/rust-mingw-nightly-${TRIPLE}.tar.gz -C out
+  bash out/rust-mingw-nightly-${TRIPLE}/install.sh --prefix=out/collect --components=rust-mingw
+  rm -rf out/rust-mingw-nightly-${TRIPLE}
+
+  cd out/collect
 
   find . -name '*.old' -delete
   cp -af ../llvm/bin/libLLVM*.dll bin
@@ -86,7 +97,6 @@ collect() {
   cp -an ../llvm/bin/. llvm-bin/.
   cp -af ../lld/bin/. llvm-bin/. || true
   cp -an ../lld/bin/. llvm-bin/.
-  cp -af $RUST_BUILD/tmp/dist/lib/rustlib/. lib/rustlib/.
 
   local MINGW_DIR=lib/rustlib/$TRIPLE/bin/self-contained
 
