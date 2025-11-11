@@ -75,8 +75,8 @@ jobs:
           name: ondk-windows
           path: dist\*.tar.xz
 
-  macos-x64:
-    name: Build for macOS (x64)
+  macos-x64-llvm:
+    name: Build LLVM for macOS (x64)
     runs-on: macos-15-intel
 
     steps:
@@ -90,12 +90,55 @@ jobs:
         with:
           python-version: "3.x"
 
-      - name: Build toolchain
+      - name: Build LLVM
         run: |
           brew reinstall ninja zstd binutils gpatch
-          ./build.sh clone build collect
+          ./build.sh clone-llvm build-llvm
+          rm -rf out/llvm/build
           mkdir tmp
+          tar c out/llvm | xz --x86 --lzma2 > tmp/llvm.x64.tar.xz
+
+      - name: Upload LLVM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-x64-llvm
+          path: tmp/*.tar.xz
+
+  macos-x64:
+    name: Build for macOS (x64)
+    runs-on: macos-15-intel
+    needs: [macos-x64-llvm]
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python 3
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Download LLVM artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-x64-llvm
+          path: tmp
+
+      - name: Build toolchain
+        run: |
+          xz -d < tmp/llvm.x64.tar.xz | tar x
+          rm tmp/llvm.x64.tar.xz
+          brew reinstall ninja zstd binutils gpatch
+          ./build.sh clone build-rust collect
           tar c out/collect | xz --x86 --lzma2 > tmp/out.x64.tar.xz
+
+      - name: Remove LLVM artifact
+        uses: geekyeggo/delete-artifact@v4
+        with:
+          name: macos-x64-llvm
+          failOnError: false
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
