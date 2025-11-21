@@ -23,7 +23,6 @@ config_rust_build() {
 
   # MinGW libstdc++ is incompatible with clang when LTO is enabled, we have to use libc++
   set_build_cfg llvm.use-libcxx true
-  set_build_cfg llvm.static-libstdcpp true
   set_build_cfg rust.use-lld true
   set_build_cfg dist.include-mingw-linker true
 
@@ -39,7 +38,6 @@ config_llvm() {
   set_llvm_cfg CMAKE_C_COMPILER clang
   set_llvm_cfg CMAKE_CXX_COMPILER clang++
   set_llvm_cfg LLVM_USE_LINKER lld
-  set_llvm_cfg LLVM_STATIC_LINK_CXX_STDLIB ON
   set_llvm_cfg LLVM_ENABLE_LIBCXX ON
   set_llvm_cfg LLVM_ENABLE_PLUGINS OFF
   set_llvm_cfg LLVM_USE_SYMLINKS ON
