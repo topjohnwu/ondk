@@ -31,9 +31,6 @@ codegen-units = 1
 
 [target.x86_64-unknown-linux-gnu]
 llvm-config = "../../out/llvm/bin/llvm-config"
-cc = "clang-20"
-cxx = "clang++-20"
-linker = "clang-20"
 
 [target.aarch64-apple-darwin]
 llvm-config = "../../out/llvm/bin/llvm-config"

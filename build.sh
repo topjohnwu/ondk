@@ -5,6 +5,8 @@
 
 . common.sh
 
+LINUX_HOST_LLVM_VER=20
+
 OS=$(uname | tr '[:upper:]' '[:lower:]')
 NATIVE_ARCH=$(uname -m)
 if [ $NATIVE_ARCH = "arm64" ]; then
@@ -43,6 +45,9 @@ config_rust_build() {
     set_build_cfg rust.use-lld true
     set_build_cfg llvm.use-libcxx true
     set_build_cfg llvm.static-libstdcpp true
+    set_build_cfg target.${TRIPLE}.cc clang-$LINUX_HOST_LLVM_VER
+    set_build_cfg target.${TRIPLE}.cxx clang++-$LINUX_HOST_LLVM_VER
+    set_build_cfg target.${TRIPLE}.linker clang-$LINUX_HOST_LLVM_VER
     export LD_LIBRARY_PATH="$(realpath out/llvm/lib)"
   fi
 }
@@ -57,8 +62,8 @@ build_llvm() {
     set_llvm_cfg LLVM_BINUTILS_INCDIR $(brew --prefix)/opt/binutils/include
   else
     set_llvm_cfg LLVM_BINUTILS_INCDIR /usr/include
-    set_llvm_cfg CMAKE_C_COMPILER clang-20
-    set_llvm_cfg CMAKE_CXX_COMPILER clang++-20
+    set_llvm_cfg CMAKE_C_COMPILER clang-$LINUX_HOST_LLVM_VER
+    set_llvm_cfg CMAKE_CXX_COMPILER clang++-$LINUX_HOST_LLVM_VER
     set_llvm_cfg LLVM_USE_LINKER lld
     set_llvm_cfg LLVM_STATIC_LINK_CXX_STDLIB ON
     set_llvm_cfg LLVM_ENABLE_LIBCXX ON
