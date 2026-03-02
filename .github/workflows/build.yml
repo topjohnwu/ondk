@@ -64,10 +64,7 @@ jobs:
           pacboy: 7zip:p cmake:p gcc:p ninja:p zstd:p clang:p lld:p libc++:p
 
       - name: Build toolchain
-        run: |
-          # Remove libzstd.dll.a to make sure zstd is statically linked
-          rm -f /mingw64/lib/libzstd.dll.a
-          bash build-windows.sh
+        run: bash build-windows.sh
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4

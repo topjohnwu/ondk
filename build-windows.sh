@@ -101,11 +101,19 @@ collect() {
 
   local MINGW_DIR=lib/rustlib/$TRIPLE/bin/self-contained
 
+  # Fix-up mingw components
+  rm $MINGW_DIR/dlltool.exe
+  cp -af /mingw64/bin/dlltool.exe /mingw64/bin/as.exe bin
+
   # Copy runtime dlls
-  cp_sys_dlls bin/rustc.exe
+  (
+    export PATH="$(pwd)/bin:$PATH"
+    cp_sys_dlls bin/rustc.exe
+    cp_sys_dlls bin/dlltool.exe
+    cp_sys_dlls $MINGW_DIR/ld.exe
+    cp_sys_dlls $MINGW_DIR/x86_64-w64-mingw32-gcc.exe
+  )
   cp_sys_dlls llvm-bin/clang.exe
-  cp_sys_dlls $MINGW_DIR/ld.exe
-  cp_sys_dlls $MINGW_DIR/x86_64-w64-mingw32-gcc.exe
 
   strip_exe
   cd ../../
