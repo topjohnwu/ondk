@@ -224,6 +224,52 @@ dl_ndk() {
   unzip -q $NDK_ZIP
   mv $NDK_EXTRACT out/ndk
   echo $OUTPUT_VERSION > out/ndk/ONDK_VERSION
+  cleanup_ndk
+}
+
+cleanup_ndk() {
+  local llvm_dir="out/ndk/toolchains/llvm/prebuilt/$NDK_DIRNAME"
+  local prebuilt_bin="out/ndk/prebuilt/$NDK_DIRNAME/bin"
+
+  # 1. Remove bundled python3 and host LLDB executables/wrappers/libraries
+  rm -rf \
+    "$llvm_dir/python3" \
+    "$llvm_dir/bin/lldb"* \
+    "$llvm_dir/bin/liblldb"* \
+    "$llvm_dir/bin/libxml2"* \
+    "$llvm_dir/lib/liblldb"* \
+    "$llvm_dir/lib/libpython"* \
+    "$llvm_dir/lib/python"* \
+    "$llvm_dir/lib/site-packages" \
+    "$llvm_dir/lib/libxml2"* \
+    "$llvm_dir/lib/libedit"* \
+    "$llvm_dir/lib/libncurses"* \
+    "$llvm_dir/lib/libform"* \
+    "$llvm_dir/lib/libpanel"* \
+    "$llvm_dir/lib/liblzma"*
+
+  # 2. Remove NDK scripts and zipapps that rely on lldb / bundled python3
+  rm -rf \
+    out/ndk/ndk-gdb* \
+    out/ndk/ndk-lldb* \
+    out/ndk/ndk-stack* \
+    "$prebuilt_bin/ndk-gdb"* \
+    "$prebuilt_bin/ndkgdb.pyz" \
+    "$prebuilt_bin/ndk-stack"* \
+    "$prebuilt_bin/ndkstack.pyz"
+
+  # 3. Remove unused upstream host C++ runtime libraries and host triple dirs
+  rm -rf \
+    "$llvm_dir/musl" \
+    "$llvm_dir/lib/libc++"* \
+    "$llvm_dir/lib/libunwind"* \
+    "$llvm_dir/lib/libsimpleperf_readelf.a" \
+    "$llvm_dir/lib/"*-linux-* \
+    "$llvm_dir/lib/"*-windows-* \
+    "out/ndk/shader-tools/$NDK_DIRNAME/libc++"*
+
+  # 4. Remove simpleperf host executables and shared libraries
+  rm -rf "out/ndk/simpleperf/bin/$OS"
 }
 
 dist() {

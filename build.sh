@@ -138,7 +138,7 @@ ndk() {
   update_dir rust/tools-bin $LLVM_DIR/bin
   update_dir rust/tools-bin ../prebuilt/$NDK_DIRNAME/bin
   update_dir rust/tools-bin ../shader-tools/$NDK_DIRNAME
-  rm -rf rust/tools-bin ../shader-tools/$NDK_DIRNAME/libc++.so
+  rm -rf rust/tools-bin
   cd $LLVM_DIR/lib
   ln -sf ../../../../rust/lib/*.$DYN_EXT* .
 
