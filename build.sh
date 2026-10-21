@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2022-2025 Google LLC.
+# Copyright 2022-2026 Google LLC.
 # SPDX-License-Identifier: Apache-2.0
 
 . common.sh
@@ -67,9 +67,10 @@ build_llvm() {
     set_llvm_cfg LLVM_USE_LINKER lld
     set_llvm_cfg LLVM_STATIC_LINK_CXX_STDLIB ON
     set_llvm_cfg LLVM_ENABLE_LIBCXX ON
+    set_llvm_cfg ZLIB_USE_STATIC_LIBS ON
   fi
 
-  set_llvm_cfg LLVM_ENABLE_PROJECTS "clang;lld"
+  set_llvm_cfg LLVM_ENABLE_PROJECTS "clang;lld;clang-tools-extra;polly;bolt"
   set_llvm_cfg LLVM_ENABLE_LTO Thin
   set_llvm_cfg LLVM_ENABLE_PLUGINS FORCE_ON
   set_llvm_cfg LLVM_LINK_LLVM_DYLIB ON

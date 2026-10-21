@@ -39,6 +39,7 @@ config_llvm() {
   set_llvm_cfg CMAKE_CXX_COMPILER clang++
   set_llvm_cfg LLVM_USE_LINKER lld
   set_llvm_cfg LLVM_ENABLE_LIBCXX ON
+  set_llvm_cfg ZLIB_USE_STATIC_LIBS ON
   set_llvm_cfg LLVM_ENABLE_PLUGINS OFF
   set_llvm_cfg LLVM_USE_SYMLINKS ON
 }
@@ -62,7 +63,7 @@ build_llvm() {
   cd out/llvm/build
 
   config_llvm
-  set_llvm_cfg LLVM_ENABLE_PROJECTS clang
+  set_llvm_cfg LLVM_ENABLE_PROJECTS "clang;clang-tools-extra;polly"
   set_llvm_cfg LLVM_LINK_LLVM_DYLIB ON
   # BUG: latest LLVM shipped with MSYS2 cannot build with LTO
   # set_llvm_cfg LLVM_ENABLE_LTO Thin

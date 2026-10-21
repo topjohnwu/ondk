@@ -29,7 +29,7 @@ jobs:
       - name: Build toolchain
         run: |
           sudo apt-get update
-          sudo apt-get -y install cmake ninja-build libzstd-dev binutils-dev
+          sudo apt-get -y install cmake ninja-build libzstd-dev zlib1g-dev binutils-dev
           wget https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
           sudo ./llvm.sh 20
@@ -61,7 +61,7 @@ jobs:
           msystem: MINGW64
           update: true
           install: make diffutils tar patch unzip gzip python
-          pacboy: 7zip:p cmake:p gcc:p ninja:p zstd:p clang:p lld:p libc++:p
+          pacboy: 7zip:p cmake:p gcc:p ninja:p zstd:p zlib:p clang:p lld:p libc++:p
 
       - name: Build toolchain
         run: bash build-windows.sh

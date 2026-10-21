@@ -9,7 +9,6 @@ NDK_DIR_VERSION=$NDK_VERSION
 # Android LLVM versions:
 # https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+/mirror-goog-main-llvm-toolchain-source/README.md
 # These revisions are obtained from the Android's LLVM manifest.xml
-LLVM_SVN='574158'
 LLVM_VERSION='9f872551d3c681d06fd303b36f16ed5c274735eb'
 LLVM_ANDROID_VERSION='cbd9e7f4da965e4be38f3f9b340d06678ac69fce'
 TOOLCHAIN_UTILS_VERSION='9b4f94761eea83b6edd1b59f485cddff6bd01b38'
@@ -72,8 +71,9 @@ clone_llvm() {
   git_clone_sha https://android.googlesource.com/platform/external/toolchain-utils $TOOLCHAIN_UTILS_VERSION
 
   # Patch the LLVM source code
+  local llvm_svn=$(sed -n "s/^_svn_revision = 'r\([0-9]*\).*'/\1/p" src/llvm_android/src/llvm_android/android_version.py)
   python3 src/toolchain-utils/py/bin/llvm_tools/patch_manager.py \
-    --svn_version $LLVM_SVN \
+    --svn_version $llvm_svn \
     --patch_metadata_file src/llvm_android/patches/PATCHES.json \
     --src_path src/llvm-project
 }
@@ -126,18 +126,31 @@ update_dir() {
 
 common_config_llvm() {
   unset LLVM_BUILD_CFG
+  local version_py=../../../src/llvm_android/src/llvm_android/android_version.py
+  local patch_level=$(sed -n "s/^_patch_level = '\(.*\)'/\1/p" $version_py)
+  local svn_rev=$(sed -n "s/^_svn_revision = '\(.*\)'/\1/p" $version_py)
   set_llvm_cfg CMAKE_BUILD_TYPE Release
   set_llvm_cfg CMAKE_INSTALL_PREFIX ../
-  set_llvm_cfg LLVM_TARGETS_TO_BUILD "AArch64;ARM;X86;RISCV"
+  set_llvm_cfg LLVM_TARGETS_TO_BUILD "AArch64;ARM;BPF;RISCV;WebAssembly;X86"
+  set_llvm_cfg LLVM_VERSION_PATCH $patch_level
   set_llvm_cfg LLVM_VERSION_SUFFIX
+  set_llvm_cfg CLANG_VENDOR "Android (ONDK ${OUTPUT_VERSION}, based on ${svn_rev})"
+  set_llvm_cfg CLANG_REPOSITORY_STRING "https://android.googlesource.com/toolchain/llvm-project"
+  set_llvm_cfg BUG_REPORT_URL "https://github.com/topjohnwu/ondk/issues"
+  set_llvm_cfg CLANG_DEFAULT_LINKER lld
+  set_llvm_cfg CLANG_DEFAULT_OBJCOPY llvm-objcopy
+  set_llvm_cfg CLANG_ENABLE_ARCMT OFF
+  set_llvm_cfg CLANG_PYTHON_BINDINGS_VERSIONS 3
+  set_llvm_cfg CMAKE_PLATFORM_NO_VERSIONED_SONAME ON
   set_llvm_cfg LLVM_TARGET_ARCH $ARCH
   set_llvm_cfg LLVM_DEFAULT_TARGET_TRIPLE $TRIPLE
-  set_llvm_cfg LLVM_ENABLE_ZLIB OFF
+  set_llvm_cfg LLVM_ENABLE_ZLIB FORCE_ON
   set_llvm_cfg LLVM_ENABLE_LIBXML2 OFF
   set_llvm_cfg LLVM_ENABLE_ZSTD FORCE_ON
   set_llvm_cfg LLVM_USE_STATIC_ZSTD ON
   set_llvm_cfg LLVM_INCLUDE_TESTS OFF
   set_llvm_cfg LLVM_ENABLE_LIBEDIT OFF
+  set_llvm_cfg LLVM_ENABLE_TERMINFO OFF
   set_llvm_cfg LLVM_ENABLE_BINDINGS OFF
   set_llvm_cfg LLVM_ENABLE_Z3_SOLVER OFF
   set_llvm_cfg LLVM_ENABLE_ASSERTIONS OFF
