@@ -33,6 +33,28 @@ config_rust_build() {
   export PATH="$(realpath out/llvm/dlls):$PATH"
 }
 
+config_tools_build() {
+  set_tools_cfg CMAKE_C_COMPILER clang
+  set_tools_cfg CMAKE_CXX_COMPILER clang++
+  set_tools_cfg CMAKE_C_FLAGS "-Os -fomit-frame-pointer -w"
+  set_tools_cfg CMAKE_CXX_FLAGS "-Os -fomit-frame-pointer -w -fno-rtti -fno-exceptions -stdlib=libc++"
+  set_tools_cfg CMAKE_EXE_LINKER_FLAGS "-fuse-ld=lld -static -static-libgcc -static-libstdc++"
+  set_tools_cfg CMAKE_SHARED_LINKER_FLAGS "-fuse-ld=lld -static -static-libgcc -static-libstdc++"
+}
+
+build_toolbox() {
+  mkdir -p out/tools/bin
+  local src_dir="src/ndk/sources/host-tools/toolbox"
+  local flags="-Os -fomit-frame-pointer -fuse-ld=lld -static -static-libgcc"
+  clang $flags -o out/tools/bin/echo.exe "$src_dir/echo_win.c"
+  clang $flags -o out/tools/bin/cmp.exe "$src_dir/cmp_win.c"
+}
+
+build_tools() {
+  build_shaderc
+  build_toolbox
+}
+
 config_llvm() {
   common_config_llvm
   set_llvm_cfg CMAKE_C_COMPILER clang
@@ -99,6 +121,9 @@ collect() {
   cp -an ../llvm/bin/. llvm-bin/.
   cp -af ../lld/bin/. llvm-bin/. || true
   cp -an ../lld/bin/. llvm-bin/.
+  cp -af ../tools/bin tools-bin
+  cp -af /mingw64/bin/yasm.exe /mingw64/bin/ytasm.exe /mingw64/bin/vsyasm.exe tools-bin
+  cp -af /mingw64/bin/mingw32-make.exe tools-bin/make.exe
 
   local MINGW_DIR=lib/rustlib/$TRIPLE/bin/self-contained
 
@@ -115,6 +140,8 @@ collect() {
     cp_sys_dlls $MINGW_DIR/x86_64-w64-mingw32-gcc.exe
   )
   cp_sys_dlls llvm-bin/clang.exe
+  cp_sys_dlls tools-bin/yasm.exe
+  cp_sys_dlls tools-bin/make.exe
 
   strip_exe
   cd ../../
@@ -141,12 +168,18 @@ ndk() {
 
   # First copy over all runtime dlls
   cp -af rust/llvm-bin/*.dll $LLVM_DIR/bin
+  cp -af rust/tools-bin/*.dll $LLVM_DIR/bin
+  cp -af rust/tools-bin/*.dll ../prebuilt/$NDK_DIRNAME/bin
 
   # Replace files with those from the rust toolchain
   touch $LLVM_DIR/bin/lld.exe
   ln -sf lld.exe $LLVM_DIR/bin/ld.exe
   update_dir rust/llvm-bin $LLVM_DIR/bin
   rm -rf rust/llvm-bin
+  update_dir rust/tools-bin $LLVM_DIR/bin
+  update_dir rust/tools-bin ../prebuilt/$NDK_DIRNAME/bin
+  update_dir rust/tools-bin ../shader-tools/$NDK_DIRNAME
+  rm -rf rust/tools-bin
 
   cd ../../../
 }

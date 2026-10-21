@@ -33,8 +33,18 @@ set_build_cfg() {
   RUST_CFG="$RUST_CFG '--set=$1=$2'"
 }
 
+# key value
+set_tools_cfg() {
+  local cfg="\"-D${1}=$2\""
+  if [ -z "$TOOLS_CMAKE_CFG" ]; then
+    TOOLS_CMAKE_CFG="$cfg"
+  else
+    TOOLS_CMAKE_CFG="$TOOLS_CMAKE_CFG $cfg"
+  fi
+}
+
 strip_exe() {
-  for path in bin llvm-bin lib; do
+  for path in bin llvm-bin tools-bin lib; do
     find $path -maxdepth 1 -type f \
       -exec sh -c "file {} | grep -q $EXE_FMT" \; \
       -exec ../llvm/bin/llvm-strip -s {} \;
@@ -55,7 +65,7 @@ git_clone_sha() {
 }
 
 git_clone_branch() {
-  local dir=${1##*/}
+  local dir=${3:-${1##*/}}
   git clone --single-branch --depth 1 --branch $2 $1 src/$dir
 }
 
@@ -76,6 +86,19 @@ clone_llvm() {
     --svn_version $llvm_svn \
     --patch_metadata_file src/llvm_android/patches/PATCHES.json \
     --src_path src/llvm-project
+}
+
+clone_tools() {
+  rm -rf src/shaderc src/ndk
+
+  local tag="ndk-$NDK_VERSION"
+  git_clone_branch https://android.googlesource.com/platform/external/shaderc/shaderc $tag
+  git_clone_branch https://android.googlesource.com/platform/external/shaderc/glslang $tag shaderc/third_party/glslang
+  git_clone_branch https://android.googlesource.com/platform/external/shaderc/spirv-headers $tag shaderc/third_party/spirv-headers
+  git_clone_branch https://android.googlesource.com/platform/external/shaderc/spirv-tools $tag shaderc/third_party/spirv-tools
+  if [ "$OS" = "windows" ]; then
+    git_clone_branch https://android.googlesource.com/platform/ndk $tag
+  fi
 }
 
 clone_rust() {
@@ -162,6 +185,27 @@ common_config_llvm() {
   set_llvm_cfg LLVM_INSTALL_UTILS ON
 }
 
+common_config_tools() {
+  unset TOOLS_CMAKE_CFG
+  set_tools_cfg CMAKE_BUILD_TYPE Release
+  set_tools_cfg CMAKE_INSTALL_PREFIX "$(realpath ..)"
+  set_tools_cfg CMAKE_POLICY_VERSION_MINIMUM 3.5
+  config_tools_build
+}
+
+build_shaderc() {
+  mkdir -p out/tools/build-shaderc
+  cd out/tools/build-shaderc
+  common_config_tools
+  set_tools_cfg SHADERC_SKIP_TESTS ON
+  set_tools_cfg SHADERC_SKIP_EXAMPLES ON
+  set_tools_cfg SHADERC_SKIP_COPYRIGHT_CHECK ON
+  set_tools_cfg SPIRV-Headers_SOURCE_DIR "$(realpath ../../../src/shaderc/third_party/spirv-headers)"
+  eval cmake -G Ninja ../../../src/shaderc $TOOLS_CMAKE_CFG
+  cmake --build . --target install
+  cd ../../../
+}
+
 build_rust() {
   rm -rf out/rust
   config_rust_build
@@ -194,22 +238,31 @@ run_cmd() {
   case $1 in
     clone)
       clone_llvm
+      clone_tools
       clone_rust
       ;;
     clone-llvm)
       clone_llvm
       ;;
+    clone-tools)
+      clone_tools
+      ;;
     clone-rust)
       clone_rust
       ;;
     build)
-      rm -rf out/llvm out/lld
+      rm -rf out/llvm out/lld out/tools
       build_llvm
+      build_tools
       build_rust
       ;;
     build-llvm)
       rm -rf out/llvm out/lld
       build_llvm
+      ;;
+    build-tools)
+      rm -rf out/tools
+      build_tools
       ;;
     build-rust)
       build_rust

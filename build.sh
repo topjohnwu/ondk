@@ -5,7 +5,7 @@
 
 . common.sh
 
-LINUX_HOST_LLVM_VER=20
+: ${LINUX_HOST_LLVM_VER:=20}
 
 OS=$(uname | tr '[:upper:]' '[:lower:]')
 NATIVE_ARCH=$(uname -m)
@@ -52,6 +52,29 @@ config_rust_build() {
   fi
 }
 
+config_tools_build() {
+  local cflags="-Os -fomit-frame-pointer -w"
+  local cxxflags="-Os -fomit-frame-pointer -w -fno-rtti -fno-exceptions"
+  if [ $OS = "darwin" ]; then
+    set_tools_cfg CMAKE_C_COMPILER clang
+    set_tools_cfg CMAKE_CXX_COMPILER clang++
+    set_tools_cfg CMAKE_C_COMPILER_TARGET $TRIPLE
+    set_tools_cfg CMAKE_CXX_COMPILER_TARGET $TRIPLE
+  else
+    set_tools_cfg CMAKE_C_COMPILER clang-$LINUX_HOST_LLVM_VER
+    set_tools_cfg CMAKE_CXX_COMPILER clang++-$LINUX_HOST_LLVM_VER
+    cxxflags="$cxxflags -stdlib=libc++"
+    set_tools_cfg CMAKE_EXE_LINKER_FLAGS "-fuse-ld=lld -static-libstdc++"
+    set_tools_cfg CMAKE_SHARED_LINKER_FLAGS "-fuse-ld=lld -static-libstdc++"
+  fi
+  set_tools_cfg CMAKE_C_FLAGS "$cflags"
+  set_tools_cfg CMAKE_CXX_FLAGS "$cxxflags"
+}
+
+build_tools() {
+  build_shaderc
+}
+
 build_llvm() {
   mkdir -p out/llvm/build
   cd out/llvm/build
@@ -86,6 +109,13 @@ collect() {
 
   find . -name '*.old' -delete
   cp -af ../llvm/bin llvm-bin
+  cp -af ../tools/bin tools-bin
+  cp -af $(which yasm) $(which ytasm) $(which vsyasm) tools-bin
+  if [ $OS = "darwin" ]; then
+    cp -af $(which gmake) tools-bin/make
+  else
+    cp -af $(which make) tools-bin/make
+  fi
   find ../llvm/lib -name "*.${DYN_EXT}*" -exec cp -an {} lib \;
   strip_exe
   cd ../../
@@ -105,6 +135,10 @@ ndk() {
   # Replace files with those from the rust toolchain
   update_dir rust/llvm-bin $LLVM_DIR/bin
   rm -rf rust/llvm-bin
+  update_dir rust/tools-bin $LLVM_DIR/bin
+  update_dir rust/tools-bin ../prebuilt/$NDK_DIRNAME/bin
+  update_dir rust/tools-bin ../shader-tools/$NDK_DIRNAME
+  rm -rf rust/tools-bin ../shader-tools/$NDK_DIRNAME/libc++.so
   cd $LLVM_DIR/lib
   ln -sf ../../../../rust/lib/*.$DYN_EXT* .
 

@@ -29,7 +29,7 @@ jobs:
       - name: Build toolchain
         run: |
           sudo apt-get update
-          sudo apt-get -y install cmake ninja-build libzstd-dev zlib1g-dev binutils-dev
+          sudo apt-get -y install cmake ninja-build libzstd-dev zlib1g-dev binutils-dev yasm
           wget https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
           sudo ./llvm.sh 20
@@ -61,7 +61,7 @@ jobs:
           msystem: MINGW64
           update: true
           install: make diffutils tar patch unzip gzip python
-          pacboy: 7zip:p cmake:p gcc:p ninja:p zstd:p zlib:p clang:p lld:p libc++:p
+          pacboy: 7zip:p cmake:p gcc:p ninja:p zstd:p zlib:p clang:p lld:p libc++:p yasm:p make:p
 
       - name: Build toolchain
         run: bash build-windows.sh
@@ -127,8 +127,8 @@ jobs:
         run: |
           xz -d < tmp/llvm.x64.tar.xz | tar x
           rm tmp/llvm.x64.tar.xz
-          brew reinstall ninja zstd binutils gpatch
-          ./build.sh clone build-rust collect
+          brew reinstall ninja zstd binutils gpatch yasm make
+          ./build.sh clone build-tools build-rust collect
           tar c out/collect | xz --x86 --lzma2 > tmp/out.x64.tar.xz
 
       - name: Remove LLVM artifact
@@ -160,7 +160,7 @@ jobs:
 
       - name: Build toolchain
         run: |
-          brew reinstall ninja zstd binutils gpatch
+          brew reinstall ninja zstd binutils gpatch yasm make
           ./build.sh clone build collect
           mkdir tmp
           tar c out/collect | xz > tmp/out.arm64.tar.xz
