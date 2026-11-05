@@ -122,7 +122,7 @@ collect() {
   cp -af ../lld/bin/. llvm-bin/. || true
   cp -an ../lld/bin/. llvm-bin/.
   cp -af ../tools/bin tools-bin
-  cp -af /mingw64/bin/yasm.exe /mingw64/bin/ytasm.exe /mingw64/bin/vsyasm.exe tools-bin
+  cp -af /mingw64/bin/yasm.exe tools-bin
   cp -af /mingw64/bin/mingw32-make.exe tools-bin/make.exe
 
   local MINGW_DIR=lib/rustlib/$TRIPLE/bin/self-contained
@@ -182,6 +182,7 @@ ndk() {
   rm -rf rust/tools-bin
 
   cd ../../../
+  check_ndk
 }
 
 export MSYS=winsymlinks:nativestrict

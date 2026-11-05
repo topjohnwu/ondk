@@ -248,7 +248,7 @@ cleanup_ndk() {
     "$llvm_dir/lib/libpanel"* \
     "$llvm_dir/lib/liblzma"*
 
-  # 2. Remove NDK scripts and zipapps that rely on lldb / bundled python3
+  # 2. Remove NDK scripts and zipapps that rely on lldb / bundled python3, and duplicate yasm binaries
   rm -rf \
     out/ndk/ndk-gdb* \
     out/ndk/ndk-lldb* \
@@ -256,13 +256,15 @@ cleanup_ndk() {
     "$prebuilt_bin/ndk-gdb"* \
     "$prebuilt_bin/ndkgdb.pyz" \
     "$prebuilt_bin/ndk-stack"* \
-    "$prebuilt_bin/ndkstack.pyz"
+    "$prebuilt_bin/ndkstack.pyz" \
+    "$prebuilt_bin/"{yasm,ytasm,vsyasm}*
 
   # 3. Remove unused upstream host C++ runtime libraries and host triple dirs
   rm -rf \
     "$llvm_dir/musl" \
     "$llvm_dir/lib/libc++"* \
     "$llvm_dir/lib/libunwind"* \
+    "$llvm_dir/lib/libwinpthread"* \
     "$llvm_dir/lib/libsimpleperf_readelf.a" \
     "$llvm_dir/lib/"*-linux-* \
     "$llvm_dir/lib/"*-windows-* \
@@ -270,6 +272,38 @@ cleanup_ndk() {
 
   # 4. Remove simpleperf host executables and shared libraries
   rm -rf "out/ndk/simpleperf/bin/$OS"
+
+  # 5. Record all remaining host binaries to verify replacement later
+  find out/ndk -type f \
+    ! -path '*/sysroot/*' \
+    ! -path '*/lib/clang/*' \
+    ! -path '*/simpleperf/bin/android/*' \
+    -exec sh -c "file {} | grep -q $EXE_FMT" \; \
+    -exec shasum {} + > out/ndk_bins.txt
+}
+
+check_ndk() {
+  local unreplaced=$(shasum -c out/ndk_bins.txt 2>/dev/null | grep ': OK$' | sed 's/: OK$//')
+  local dangling=$(find out/ndk -xtype l)
+  local failed=0
+
+  rm -f out/ndk_bins.txt
+
+  if [ -n "$unreplaced" ]; then
+    echo "Error: Unreplaced host binaries in NDK:" >&2
+    echo "$unreplaced" >&2
+    failed=1
+  fi
+
+  if [ -n "$dangling" ]; then
+    echo "Error: Dangling symlinks in NDK:" >&2
+    echo "$dangling" >&2
+    failed=1
+  fi
+
+  if [ $failed -ne 0 ]; then
+    exit 1
+  fi
 }
 
 dist() {

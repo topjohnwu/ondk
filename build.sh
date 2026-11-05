@@ -110,7 +110,7 @@ collect() {
   find . -name '*.old' -delete
   cp -af ../llvm/bin llvm-bin
   cp -af ../tools/bin tools-bin
-  cp -af $(which yasm) $(which ytasm) $(which vsyasm) tools-bin
+  cp -af $(which yasm) tools-bin
   if [ $OS = "darwin" ]; then
     cp -af $(which gmake) tools-bin/make
   else
@@ -143,6 +143,7 @@ ndk() {
   ln -sf ../../../../rust/lib/*.$DYN_EXT* .
 
   cd ../../../../../../../
+  check_ndk
 }
 
 
