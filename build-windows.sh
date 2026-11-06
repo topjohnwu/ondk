@@ -13,8 +13,17 @@ fi
 
 OS='windows'
 NDK_DIRNAME='windows-x86_64'
-ARCH='x86_64'
-TRIPLE='x86_64-pc-windows-gnu'
+# msys-2.0.dll is emulated x86_64 on ARM64 Windows, so `uname -m` returns x86_64.
+# Check $MSYSTEM_CARCH or `uname -s` instead, and force a POSIX MINGW_PREFIX for `ldd`.
+if [ "$MSYSTEM_CARCH" = "aarch64" ] || uname -s | grep -q 'ARM64'; then
+  ARCH='aarch64'
+  TRIPLE='aarch64-pc-windows-gnullvm'
+  MINGW_PREFIX='/clangarm64'
+else
+  ARCH='x86_64'
+  TRIPLE='x86_64-pc-windows-gnu'
+  MINGW_PREFIX='/mingw64'
+fi
 DYN_EXT='dll'
 EXE_FMT='PE32+'
 
@@ -25,6 +34,11 @@ config_rust_build() {
   set_build_cfg llvm.use-libcxx true
   set_build_cfg rust.use-lld true
   set_build_cfg dist.include-mingw-linker true
+
+  # Prevent cc-rs from inheriting -flto=thin from rustc flags, as MSYS2's host clang
+  # is newer than ONDK's LLVM and emits bitcode that stage1 rustc/lld cannot read.
+  export CFLAGS="-fno-lto"
+  export CXXFLAGS="-fno-lto"
 
   # Expose all LLVM dlls to stage1 rustc
   rm -rf out/llvm/dlls
@@ -37,7 +51,7 @@ config_tools_build() {
   set_tools_cfg CMAKE_C_COMPILER clang
   set_tools_cfg CMAKE_CXX_COMPILER clang++
   set_tools_cfg CMAKE_C_FLAGS "-Os -fomit-frame-pointer -w"
-  set_tools_cfg CMAKE_CXX_FLAGS "-Os -fomit-frame-pointer -w -fno-rtti -fno-exceptions -stdlib=libc++"
+  set_tools_cfg CMAKE_CXX_FLAGS "-Os -fomit-frame-pointer -w -fno-rtti -fno-exceptions -stdlib=libc++ -include type_traits"
   set_tools_cfg CMAKE_EXE_LINKER_FLAGS "-fuse-ld=lld -static -static-libgcc -static-libstdc++"
   set_tools_cfg CMAKE_SHARED_LINKER_FLAGS "-fuse-ld=lld -static -static-libgcc -static-libstdc++"
 }
@@ -64,6 +78,14 @@ config_llvm() {
   set_llvm_cfg ZLIB_USE_STATIC_LIBS ON
   set_llvm_cfg LLVM_ENABLE_PLUGINS OFF
   set_llvm_cfg LLVM_USE_SYMLINKS ON
+  if [ "$ARCH" = "aarch64" ]; then
+    # LLVM does not recognize Rust's 'windows-gnullvm' environment name in triples
+    set_llvm_cfg LLVM_DEFAULT_TARGET_TRIPLE aarch64-pc-windows-gnu
+    # Default the MinGW driver to LLVM runtime libraries to match windows-gnullvm
+    set_llvm_cfg CLANG_DEFAULT_RTLIB compiler-rt
+    set_llvm_cfg CLANG_DEFAULT_UNWINDLIB libunwind
+    set_llvm_cfg CLANG_DEFAULT_CXX_STDLIB libc++
+  fi
 }
 
 build_lld() {
@@ -76,6 +98,20 @@ build_lld() {
   set_llvm_cfg CMAKE_EXE_LINKER_FLAGS "-s -static -static-libgcc"
 
   eval cmake -G Ninja ../../../src/llvm-project/llvm $LLVM_BUILD_CFG
+  cmake --build . --target install
+  cd ../../../
+}
+
+build_builtins() {
+  mkdir -p out/llvm/builtins-build
+  cd out/llvm/builtins-build
+
+  cmake -G Ninja ../../../src/llvm-project/compiler-rt/lib/builtins \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=$(realpath ../lib/clang/*) \
+    -DCMAKE_C_COMPILER=clang \
+    -DCMAKE_CXX_COMPILER=clang++ \
+    -DLLVM_CMAKE_DIR=$(realpath ../lib/cmake/llvm)
   cmake --build . --target install
   cd ../../../
 }
@@ -93,6 +129,11 @@ build_llvm() {
   eval cmake -G Ninja ../../../src/llvm-project/llvm $LLVM_BUILD_CFG
   cmake --build . --target install
   cd ../../../
+
+  if [ "$ARCH" = "aarch64" ]; then
+    # Build libclang_rt.builtins-aarch64.a for self-contained host linking
+    build_builtins
+  fi
 
   # We have to build LLD statically to prevent flakiness
   build_lld
@@ -122,23 +163,40 @@ collect() {
   cp -af ../lld/bin/. llvm-bin/. || true
   cp -an ../lld/bin/. llvm-bin/.
   cp -af ../tools/bin tools-bin
-  cp -af /mingw64/bin/yasm.exe tools-bin
-  cp -af /mingw64/bin/mingw32-make.exe tools-bin/make.exe
+  cp -af $MINGW_PREFIX/bin/yasm.exe tools-bin
+  cp -af $MINGW_PREFIX/bin/mingw32-make.exe tools-bin/make.exe
 
-  local MINGW_DIR=lib/rustlib/$TRIPLE/bin/self-contained
+  if [ "$ARCH" = "aarch64" ]; then
+    # rust-mingw for windows-gnullvm only populates lib/self-contained (no bin/self-contained).
+    # Also bundle extra import libs required by LLVM 22's MinGW driver (which ignores -nolibc)
+    # and stage the compiler-rt builtins built during build_llvm.
+    local SELF_CONTAINED_LIB=lib/rustlib/$TRIPLE/lib/self-contained
+    cp -af \
+      $MINGW_PREFIX/lib/libmoldname.a \
+      $MINGW_PREFIX/lib/libadvapi32.a \
+      $MINGW_PREFIX/lib/libshell32.a \
+      $SELF_CONTAINED_LIB
+    cp -af ../llvm/lib/clang/*/lib/windows clang-windows-lib
+    (
+      export PATH="$(pwd)/bin:$PATH"
+      cp_sys_dlls bin/rustc.exe
+    )
+  else
+    local MINGW_DIR=lib/rustlib/$TRIPLE/bin/self-contained
 
-  # Fix-up mingw components
-  rm $MINGW_DIR/dlltool.exe
-  cp -af /mingw64/bin/dlltool.exe /mingw64/bin/as.exe bin
+    # Fix-up mingw components
+    rm $MINGW_DIR/dlltool.exe
+    cp -af $MINGW_PREFIX/bin/dlltool.exe $MINGW_PREFIX/bin/as.exe bin
 
-  # Copy runtime dlls
-  (
-    export PATH="$(pwd)/bin:$PATH"
-    cp_sys_dlls bin/rustc.exe
-    cp_sys_dlls bin/dlltool.exe
-    cp_sys_dlls $MINGW_DIR/ld.exe
-    cp_sys_dlls $MINGW_DIR/x86_64-w64-mingw32-gcc.exe
-  )
+    # Copy runtime dlls
+    (
+      export PATH="$(pwd)/bin:$PATH"
+      cp_sys_dlls bin/rustc.exe
+      cp_sys_dlls bin/dlltool.exe
+      cp_sys_dlls $MINGW_DIR/ld.exe
+      cp_sys_dlls $MINGW_DIR/x86_64-w64-mingw32-gcc.exe
+    )
+  fi
   cp_sys_dlls llvm-bin/clang.exe
   cp_sys_dlls tools-bin/yasm.exe
   cp_sys_dlls tools-bin/make.exe
@@ -149,8 +207,8 @@ collect() {
 
 cp_sys_dlls() {
   local dir=$(dirname $1)
-  for lib in $(ldd $1 | grep ' /mingw64/bin/' | awk '{ print $1 }'); do
-    cp -v /mingw64/bin/$lib $dir
+  for lib in $(ldd $1 | grep " $MINGW_PREFIX/bin/" | awk '{ print $1 }'); do
+    cp -v $MINGW_PREFIX/bin/$lib $dir
   done
 }
 
@@ -176,6 +234,13 @@ ndk() {
   ln -sf lld.exe $LLVM_DIR/bin/ld.exe
   update_dir rust/llvm-bin $LLVM_DIR/bin
   rm -rf rust/llvm-bin
+  if [ "$ARCH" = "aarch64" ]; then
+    # Install Windows compiler-rt builtins into Clang's resource dir and expose
+    # our built clang and llvm-ar as rustc's self-contained host linker and dlltool.
+    mv rust/clang-windows-lib $(echo $LLVM_DIR/lib/clang/*/lib)/windows
+    ln -sf ../../$LLVM_DIR/bin/clang.exe rust/bin/aarch64-w64-mingw32-clang.exe
+    ln -sf ../../$LLVM_DIR/bin/llvm-ar.exe rust/bin/dlltool.exe
+  fi
   update_dir rust/tools-bin $LLVM_DIR/bin
   update_dir rust/tools-bin ../prebuilt/$NDK_DIRNAME/bin
   update_dir rust/tools-bin ../shader-tools/$NDK_DIRNAME
@@ -186,6 +251,8 @@ ndk() {
 }
 
 export MSYS=winsymlinks:nativestrict
+# Disable Windows UAC installer detection heuristics for tools like rust-installer.exe
+export __COMPAT_LAYER=RunAsInvoker
 export PATH="$PATH:/c/Program Files/Git/cmd"
 
 # Enable symlink support for git

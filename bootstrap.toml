@@ -48,3 +48,9 @@ llvm-config = "../../out/llvm/bin/llvm-config.exe"
 cc = "clang"
 cxx = "clang++"
 linker = "clang"
+
+[target.aarch64-pc-windows-gnullvm]
+llvm-config = "../../out/llvm/bin/llvm-config.exe"
+cc = "clang"
+cxx = "clang++"
+linker = "clang"

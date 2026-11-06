@@ -44,11 +44,8 @@ set_tools_cfg() {
 }
 
 strip_exe() {
-  for path in bin llvm-bin tools-bin lib; do
-    find $path -maxdepth 1 -type f \
-      -exec sh -c "file {} | grep -q $EXE_FMT" \; \
-      -exec ../llvm/bin/llvm-strip -s {} \;
-  done
+  find bin llvm-bin tools-bin lib -maxdepth 1 -type f -exec file {} + \
+    | grep "$EXE_FMT" | cut -d: -f1 | xargs ../llvm/bin/llvm-strip -s
 }
 
 # url sha
@@ -82,7 +79,8 @@ clone_llvm() {
 
   # Patch the LLVM source code
   local llvm_svn=$(sed -n "s/^_svn_revision = 'r\([0-9]*\).*'/\1/p" src/llvm_android/src/llvm_android/android_version.py)
-  python3 src/toolchain-utils/py/bin/llvm_tools/patch_manager.py \
+  sed -i.bak '/import fcntl/d' src/toolchain-utils/llvm_tools/get_llvm_hash.py
+  PYTHONPATH=src/toolchain-utils python3 src/toolchain-utils/py/bin/llvm_tools/patch_manager.py \
     --svn_version $llvm_svn \
     --patch_metadata_file src/llvm_android/patches/PATCHES.json \
     --src_path src/llvm-project
@@ -262,9 +260,10 @@ cleanup_ndk() {
   # 3. Remove unused upstream host C++ runtime libraries and host triple dirs
   rm -rf \
     "$llvm_dir/musl" \
+    "$llvm_dir/bin/libwinpthread"* \
+    "$llvm_dir/lib/libwinpthread"* \
     "$llvm_dir/lib/libc++"* \
     "$llvm_dir/lib/libunwind"* \
-    "$llvm_dir/lib/libwinpthread"* \
     "$llvm_dir/lib/libsimpleperf_readelf.a" \
     "$llvm_dir/lib/"*-linux-* \
     "$llvm_dir/lib/"*-windows-* \
@@ -278,12 +277,11 @@ cleanup_ndk() {
     ! -path '*/sysroot/*' \
     ! -path '*/lib/clang/*' \
     ! -path '*/simpleperf/bin/android/*' \
-    -exec sh -c "file {} | grep -q $EXE_FMT" \; \
-    -exec shasum {} + > out/ndk_bins.txt
+    -exec file {} + | grep "$EXE_FMT" | cut -d: -f1 | xargs sha256sum > out/ndk_bins.txt
 }
 
 check_ndk() {
-  local unreplaced=$(shasum -c out/ndk_bins.txt 2>/dev/null | grep ': OK$' | sed 's/: OK$//')
+  local unreplaced=$(sha256sum -c out/ndk_bins.txt 2>/dev/null | grep ': OK$' | sed 's/: OK$//')
   local dangling=$(find out/ndk -xtype l)
   local failed=0
 

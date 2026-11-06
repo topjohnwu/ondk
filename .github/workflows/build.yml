@@ -60,8 +60,8 @@ jobs:
         with:
           msystem: MINGW64
           update: true
-          install: make diffutils tar patch unzip gzip python
-          pacboy: 7zip:p cmake:p gcc:p ninja:p zstd:p zlib:p clang:p lld:p libc++:p yasm:p make:p
+          install: make diffutils tar patch unzip gzip
+          pacboy: 7zip:p cmake:p gcc:p ninja:p zstd:p zlib:p clang:p lld:p libc++:p yasm:p make:p python:p
 
       - name: Build toolchain
         run: bash build-windows.sh
