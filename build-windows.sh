@@ -167,15 +167,20 @@ collect() {
   cp -af $MINGW_PREFIX/bin/mingw32-make.exe tools-bin/make.exe
 
   if [ "$ARCH" = "aarch64" ]; then
-    # rust-mingw for windows-gnullvm only populates lib/self-contained (no bin/self-contained).
-    # Also bundle extra import libs required by LLVM 22's MinGW driver (which ignores -nolibc)
-    # and stage the compiler-rt builtins built during build_llvm.
+    # rust-mingw for windows-gnullvm only bundles 6 Windows import libs (unlike windows-gnu's
+    # make_win_dist which bundles 32) and no bin/self-contained. Bundle the full make_win_dist
+    # import lib set and stage the compiler-rt builtins built during build_llvm.
     local SELF_CONTAINED_LIB=lib/rustlib/$TRIPLE/lib/self-contained
-    cp -af \
-      $MINGW_PREFIX/lib/libmoldname.a \
-      $MINGW_PREFIX/lib/libadvapi32.a \
-      $MINGW_PREFIX/lib/libshell32.a \
-      $SELF_CONTAINED_LIB
+    for lib in \
+      libm.a libiconv.a libmoldname.a libpthread.a \
+      libadvapi32.a libbcrypt.a libcomctl32.a libcomdlg32.a libcredui.a libcrypt32.a \
+      libdbghelp.a libgdi32.a libimagehlp.a libiphlpapi.a libkernel32.a libmsimg32.a \
+      libmsvcrt.a libntdll.a libodbc32.a libole32.a liboleaut32.a libopengl32.a \
+      libpsapi.a librpcrt4.a libsecur32.a libsetupapi.a libshell32.a libsynchronization.a \
+      libuser32.a libuserenv.a libuuid.a libwinhttp.a libwinmm.a libwinspool.a \
+      libws2_32.a libwsock32.a; do
+      cp -af $MINGW_PREFIX/lib/$lib $SELF_CONTAINED_LIB
+    done
     cp -af ../llvm/lib/clang/*/lib/windows clang-windows-lib
     (
       export PATH="$(pwd)/bin:$PATH"
@@ -239,6 +244,7 @@ ndk() {
     # our built clang and llvm-ar as rustc's self-contained host linker and dlltool.
     mv rust/clang-windows-lib $(echo $LLVM_DIR/lib/clang/*/lib)/windows
     ln -sf ../../$LLVM_DIR/bin/clang.exe rust/bin/aarch64-w64-mingw32-clang.exe
+    ln -sf ../../$LLVM_DIR/bin/libclang-cpp.dll rust/bin/libclang-cpp.dll
     ln -sf ../../$LLVM_DIR/bin/llvm-ar.exe rust/bin/dlltool.exe
   fi
   update_dir rust/tools-bin $LLVM_DIR/bin
