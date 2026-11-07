@@ -157,12 +157,15 @@ collect() {
   cd out/collect
 
   find . -name '*.old' -delete
-  cp -af ../llvm/bin/libLLVM*.dll bin
   cp -af ../llvm/bin llvm-bin || true
   cp -an ../llvm/bin/. llvm-bin/.
   cp -af ../lld/bin/. llvm-bin/. || true
   cp -an ../lld/bin/. llvm-bin/.
+  for dll in llvm-bin/libLLVM*.dll; do
+    ln -sf ../$dll bin
+  done
   cp -af ../tools/bin tools-bin
+  rm -f tools-bin/*.dll
   cp -af $MINGW_PREFIX/bin/yasm.exe tools-bin
   cp -af $MINGW_PREFIX/bin/mingw32-make.exe tools-bin/make.exe
 
@@ -206,6 +209,13 @@ collect() {
   cp_sys_dlls tools-bin/yasm.exe
   cp_sys_dlls tools-bin/make.exe
 
+  for dll in lib/rustlib/$TRIPLE/lib/*.dll; do
+    dll=$(basename $dll)
+    if [ -f bin/$dll ]; then
+      ln -sf ../../../../bin/$dll lib/rustlib/$TRIPLE/lib/$dll
+    fi
+  done
+
   strip_exe
   cd ../../
 }
@@ -229,10 +239,19 @@ ndk() {
 
   local LLVM_DIR=llvm/prebuilt/$NDK_DIRNAME
 
-  # First copy over all runtime dlls
+  # First copy over all runtime dlls and deduplicate with symlinks
   cp -af rust/llvm-bin/*.dll $LLVM_DIR/bin
   cp -af rust/tools-bin/*.dll $LLVM_DIR/bin
-  cp -af rust/tools-bin/*.dll ../prebuilt/$NDK_DIRNAME/bin
+  for dll in rust/tools-bin/*.dll; do
+    dll=$(basename $dll)
+    ln -sf ../../../toolchains/$LLVM_DIR/bin/$dll ../prebuilt/$NDK_DIRNAME/bin/$dll
+  done
+  for dll in rust/bin/*.dll; do
+    dll=$(basename $dll)
+    if [ -f $LLVM_DIR/bin/$dll ]; then
+      ln -sf ../../$LLVM_DIR/bin/$dll rust/bin/$dll
+    fi
+  done
 
   # Replace files with those from the rust toolchain
   touch $LLVM_DIR/bin/lld.exe
@@ -246,6 +265,13 @@ ndk() {
     ln -sf ../../$LLVM_DIR/bin/clang.exe rust/bin/aarch64-w64-mingw32-clang.exe
     ln -sf ../../$LLVM_DIR/bin/libclang-cpp.dll rust/bin/libclang-cpp.dll
     ln -sf ../../$LLVM_DIR/bin/llvm-ar.exe rust/bin/dlltool.exe
+  else
+    for dll in rust/lib/rustlib/$TRIPLE/bin/self-contained/*.dll; do
+      dll=$(basename $dll)
+      if [ -f $LLVM_DIR/bin/$dll ]; then
+        ln -sf ../../../../../../$LLVM_DIR/bin/$dll rust/lib/rustlib/$TRIPLE/bin/self-contained/$dll
+      fi
+    done
   fi
   update_dir rust/tools-bin $LLVM_DIR/bin
   update_dir rust/tools-bin ../prebuilt/$NDK_DIRNAME/bin
