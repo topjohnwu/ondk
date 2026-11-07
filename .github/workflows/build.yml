@@ -58,10 +58,10 @@ jobs:
       - name: Setup MSYS2
         uses: msys2/setup-msys2@v2
         with:
-          msystem: MINGW64
+          msystem: CLANG64
           update: true
           install: make diffutils tar patch unzip gzip
-          pacboy: 7zip:p cmake:p gcc:p ninja:p zstd:p zlib:p clang:p lld:p libc++:p yasm:p make:p python:p
+          pacboy: 7zip:p cmake:p ninja:p zstd:p zlib:p clang:p lld:p libc++:p yasm:p make:p python:p
 
       - name: Build toolchain
         run: bash build-windows.sh

@@ -16,8 +16,8 @@ cp -af out/collect.x64 out/collect
 cp -an out/collect.arm64/. out/collect/. || true
 
 # Merge all Mach-O files as universal binary and adhoc codesign
-find out/collect -type f -exec sh -c "file {} | grep -q Mach-O" \; -print0 | \
-while IFS= read -r -d '' o; do
+find out/collect -type f -exec file {} + | grep 'Mach-O' | cut -d: -f1 | sort -u | \
+while IFS= read -r o; do
   a="${o/collect/collect.x64}"
   b="${o/collect/collect.arm64}"
   if [ -f "$a" -a -f "$b" ]; then

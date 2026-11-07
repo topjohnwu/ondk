@@ -160,7 +160,7 @@ common_config_llvm() {
   set_llvm_cfg BUG_REPORT_URL "https://github.com/topjohnwu/ondk/issues"
   set_llvm_cfg CLANG_DEFAULT_LINKER lld
   set_llvm_cfg CLANG_DEFAULT_OBJCOPY llvm-objcopy
-  set_llvm_cfg CLANG_ENABLE_ARCMT OFF
+  set_llvm_cfg CLANG_ENABLE_OBJC_REWRITER OFF
   set_llvm_cfg CLANG_PYTHON_BINDINGS_VERSIONS 3
   set_llvm_cfg CMAKE_PLATFORM_NO_VERSIONED_SONAME ON
   set_llvm_cfg LLVM_TARGET_ARCH $ARCH

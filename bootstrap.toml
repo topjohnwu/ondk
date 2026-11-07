@@ -43,7 +43,7 @@ jemalloc = true
 llvm-config = "../../out/llvm/bin/llvm-config"
 jemalloc = true
 
-[target.x86_64-pc-windows-gnu]
+[target.x86_64-pc-windows-gnullvm]
 llvm-config = "../../out/llvm/bin/llvm-config.exe"
 cc = "clang"
 cxx = "clang++"
