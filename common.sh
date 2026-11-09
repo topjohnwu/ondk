@@ -44,8 +44,13 @@ set_tools_cfg() {
 }
 
 strip_exe() {
-  find bin llvm-bin tools-bin lib -maxdepth 1 -type f -exec file {} + \
-    | grep "$EXE_FMT" | cut -d: -f1 | xargs ../llvm/bin/llvm-strip -s
+  if [ "$OS" = "darwin" ]; then
+    find bin llvm-bin tools-bin lib -maxdepth 1 -type f -exec file {} + \
+      | grep "$EXE_FMT" | grep -v ' (for architecture ' | cut -d: -f1 | xargs strip -x
+  else
+    find bin llvm-bin tools-bin lib -maxdepth 1 -type f -exec file {} + \
+      | grep "$EXE_FMT" | cut -d: -f1 | xargs ../llvm/bin/llvm-strip -s
+  fi
 }
 
 # url sha
@@ -265,6 +270,7 @@ cleanup_ndk() {
     "$llvm_dir/lib/libc++"* \
     "$llvm_dir/lib/libunwind"* \
     "$llvm_dir/lib/libsimpleperf_readelf.a" \
+    "$llvm_dir/lib/LLVMPolly.so" \
     "$llvm_dir/lib/"*-linux-* \
     "$llvm_dir/lib/"*-windows-* \
     "out/ndk/shader-tools/$NDK_DIRNAME/libc++"*
@@ -277,12 +283,12 @@ cleanup_ndk() {
     ! -path '*/sysroot/*' \
     ! -path '*/lib/clang/*' \
     ! -path '*/simpleperf/bin/android/*' \
-    -exec file {} + | grep "$EXE_FMT" | cut -d: -f1 | xargs sha256sum > out/ndk_bins.txt
+    -exec file {} + | grep "$EXE_FMT" | grep -v ' (for architecture ' | cut -d: -f1 | xargs sha256sum > out/ndk_bins.txt
 }
 
 check_ndk() {
   local unreplaced=$(sha256sum -c out/ndk_bins.txt 2>/dev/null | grep ': OK$' | sed 's/: OK$//')
-  local dangling=$(find out/ndk -xtype l)
+  local dangling=$(find -L out/ndk -type l)
   local failed=0
 
   rm -f out/ndk_bins.txt

@@ -25,7 +25,7 @@ sysconfdir = "etc"
 [rust]
 channel = "nightly"
 lto = "thin"
-strip = true
+strip = false
 lld = false
 codegen-units = 1
 

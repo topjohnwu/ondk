@@ -110,13 +110,14 @@ collect() {
   find . -name '*.old' -delete
   cp -af ../llvm/bin llvm-bin
   cp -af ../tools/bin tools-bin
-  cp -af $(which yasm) tools-bin
+  cp -aLf $(which yasm) tools-bin
   if [ $OS = "darwin" ]; then
-    cp -af $(which gmake) tools-bin/make
+    cp -aLf $(which gmake) tools-bin/make
   else
-    cp -af $(which make) tools-bin/make
+    cp -aLf $(which make) tools-bin/make
   fi
   find ../llvm/lib -name "*.${DYN_EXT}*" -exec cp -an {} lib \;
+  chmod -R u+w tools-bin
   strip_exe
   cd ../../
 }
