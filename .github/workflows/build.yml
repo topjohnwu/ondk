@@ -32,8 +32,8 @@ jobs:
           sudo apt-get -y install cmake ninja-build libzstd-dev zlib1g-dev binutils-dev yasm
           wget https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
-          sudo ./llvm.sh 20
-          sudo apt-get -y install libc++-20-dev libc++abi-20-dev
+          sudo ./llvm.sh 22
+          sudo apt-get -y install libc++-22-dev libc++abi-22-dev
           rm llvm.sh
           ./build.sh
 

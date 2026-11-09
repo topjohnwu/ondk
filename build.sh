@@ -5,7 +5,7 @@
 
 . common.sh
 
-: ${LINUX_HOST_LLVM_VER:=20}
+: ${LINUX_HOST_LLVM_VER:=22}
 
 OS=$(uname | tr '[:upper:]' '[:lower:]')
 NATIVE_ARCH=$(uname -m)
