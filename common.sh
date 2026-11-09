@@ -313,8 +313,12 @@ check_ndk() {
 dist() {
   cd out
   mv ndk "ondk-${OUTPUT_VERSION}"
-  mkdir ../dist
-  tar c "ondk-${OUTPUT_VERSION}" | xz --x86 --lzma2 > "../dist/ondk-${OUTPUT_VERSION}-${OS}.tar.xz"
+  mkdir -p ../dist
+  if [ "$ARCH" = "x86_64" ]; then
+    tar c "ondk-${OUTPUT_VERSION}" | xz --x86 --lzma2 > "../dist/ondk-${OUTPUT_VERSION}-${OS}-${ARCH}.tar.xz"
+  else
+    tar c "ondk-${OUTPUT_VERSION}" | xz > "../dist/ondk-${OUTPUT_VERSION}-${OS}-${ARCH}.tar.xz"
+  fi
   cd ../
 }
 
