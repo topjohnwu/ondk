@@ -7,14 +7,6 @@ ZLIB_VERSION='2.3.3'
 NDK_VERSION='r30-beta2'
 NDK_DIR_VERSION=$NDK_VERSION
 
-# Android LLVM versions:
-# https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+/mirror-goog-main-llvm-toolchain-source/README.md
-# These revisions are obtained from the Android's LLVM manifest.xml
-LLVM_VERSION='9f872551d3c681d06fd303b36f16ed5c274735eb'
-LLVM_ANDROID_VERSION='cbd9e7f4da965e4be38f3f9b340d06678ac69fce'
-TOOLCHAIN_UTILS_VERSION='9b4f94761eea83b6edd1b59f485cddff6bd01b38'
-ZSTD_VERSION='90212406d77e2b80b0ef0cb6ebcf2f4baf81e02f'
-
 OUTPUT_VERSION='r30.1'
 
 set -e
@@ -55,19 +47,6 @@ strip_exe() {
   fi
 }
 
-# url sha
-git_clone_sha() {
-  local dir=${1##*/}
-  echo "Cloning into 'src/$dir'..."
-  mkdir -p "src/$dir"
-  cd "src/$dir"
-  git init -q
-  git remote add origin $1
-  git fetch --depth 1 origin $2
-  git reset --hard FETCH_HEAD
-  cd ../../
-}
-
 git_clone_branch() {
   local dir=${3:-${1##*/}}
   git clone --single-branch --depth 1 --branch $2 $1 src/$dir
@@ -79,33 +58,13 @@ skip_submodule() {
 
 clone_llvm() {
   rm -rf src/llvm-project src/llvm_android src/toolchain-utils src/zstd src/zlib
-
-  git_clone_sha https://android.googlesource.com/toolchain/llvm-project $LLVM_VERSION
-  git_clone_sha https://android.googlesource.com/toolchain/llvm_android $LLVM_ANDROID_VERSION
-  git_clone_sha https://android.googlesource.com/platform/external/toolchain-utils $TOOLCHAIN_UTILS_VERSION
-  git_clone_sha https://android.googlesource.com/platform/external/zstd $ZSTD_VERSION
+  ./clone_aosp.py llvm $NDK_VERSION
   git_clone_branch https://github.com/zlib-ng/zlib-ng $ZLIB_VERSION zlib
-
-  # Patch the LLVM source code
-  local llvm_svn=$(sed -n "s/^_svn_revision = 'r\([0-9]*\).*'/\1/p" src/llvm_android/src/llvm_android/android_version.py)
-  sed -i.bak '/import fcntl/d' src/toolchain-utils/llvm_tools/get_llvm_hash.py
-  PYTHONPATH=src/toolchain-utils python3 src/toolchain-utils/py/bin/llvm_tools/patch_manager.py \
-    --svn_version $llvm_svn \
-    --patch_metadata_file src/llvm_android/patches/PATCHES.json \
-    --src_path src/llvm-project
 }
 
 clone_tools() {
   rm -rf src/shaderc src/ndk
-
-  local tag="ndk-$NDK_VERSION"
-  git_clone_branch https://android.googlesource.com/platform/external/shaderc/shaderc $tag
-  git_clone_branch https://android.googlesource.com/platform/external/shaderc/glslang $tag shaderc/third_party/glslang
-  git_clone_branch https://android.googlesource.com/platform/external/shaderc/spirv-headers $tag shaderc/third_party/spirv-headers
-  git_clone_branch https://android.googlesource.com/platform/external/shaderc/spirv-tools $tag shaderc/third_party/spirv-tools
-  if [ "$OS" = "windows" ]; then
-    git_clone_branch https://android.googlesource.com/platform/ndk $tag
-  fi
+  ./clone_aosp.py tools $NDK_VERSION $OS
 }
 
 clone_rust() {
