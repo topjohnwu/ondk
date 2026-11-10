@@ -38,10 +38,16 @@ llvm-config = "../../out/llvm/bin/llvm-config"
 [target.aarch64-apple-darwin]
 llvm-config = "../../out/llvm/bin/llvm-config"
 jemalloc = true
+cc = "aarch64-apple-darwin-clang"
+cxx = "aarch64-apple-darwin-clang++"
+linker = "aarch64-apple-darwin-clang"
 
 [target.x86_64-apple-darwin]
 llvm-config = "../../out/llvm/bin/llvm-config"
 jemalloc = true
+cc = "x86_64-apple-darwin-clang"
+cxx = "x86_64-apple-darwin-clang++"
+linker = "x86_64-apple-darwin-clang"
 
 [target.x86_64-pc-windows-gnullvm]
 llvm-config = "../../out/llvm/bin/llvm-config.exe"

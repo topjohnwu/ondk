@@ -15,6 +15,7 @@ if [ $NATIVE_ARCH = "arm64" ]; then
 fi
 
 if [ -z $ARCH ]; then
+  # ARCH is explicitly set when trying to cross-compile on macOS
   # Build the native architecture by default
   ARCH=$NATIVE_ARCH
 fi
@@ -22,16 +23,20 @@ fi
 if [ $OS = "darwin" ]; then
   NDK_DIRNAME='darwin-x86_64'
   TRIPLE="${ARCH}-apple-darwin"
-  NATIVE_TRIPLE="${NATIVE_ARCH}-apple-darwin"
   DYN_EXT='dylib'
   EXE_FMT='Mach-O'
-  # Always use GNU patch
-  export PATH="$(brew --prefix)/opt/gpatch/libexec/gnubin:$PATH"
+  if [ $ARCH = "aarch64" ]; then
+    export CMAKE_APPLE_SILICON_PROCESSOR=arm64
+  else
+    export CMAKE_APPLE_SILICON_PROCESSOR=$ARCH
+  fi
   export MACOSX_DEPLOYMENT_TARGET=11.0
+  export SDKROOT=$(xcrun --show-sdk-path)
+  # Always use GNU patch and bypass /usr/bin xcrun shims
+  export PATH="$(brew --prefix)/opt/gpatch/libexec/gnubin:${PATH/:\/usr\/bin:/:$(xcode-select -p)/usr/bin:/usr/bin:}"
 else
   NDK_DIRNAME='linux-x86_64'
   TRIPLE="${ARCH}-unknown-linux-gnu"
-  NATIVE_TRIPLE="${NATIVE_ARCH}-unknown-linux-gnu"
   DYN_EXT='so'
   EXE_FMT='ELF'
 fi
@@ -40,6 +45,11 @@ config_rust_build() {
   unset RUST_CFG
 
   if [ $OS = "darwin" ]; then
+    mkdir -p out/bin
+    ln -sf $(xcode-select -p)/usr/bin/clang out/bin/${TRIPLE}-clang
+    ln -sf $(xcode-select -p)/usr/bin/clang++ out/bin/${TRIPLE}-clang++
+    export PATH="$(realpath out/bin):$PATH"
+    export LZMA_API_STATIC=1
     export DYLD_FALLBACK_LIBRARY_PATH="$(realpath out/llvm/lib)"
   else
     set_build_cfg rust.use-lld true

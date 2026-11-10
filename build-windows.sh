@@ -85,6 +85,7 @@ config_llvm() {
   set_llvm_cfg LLVM_ENABLE_PLUGINS OFF
   set_llvm_cfg LLVM_USE_SYMLINKS ON
   # LLVM does not recognize Rust's 'windows-gnullvm' environment name in triples
+  set_llvm_cfg LLVM_HOST_TRIPLE "${ARCH}-pc-windows-gnu"
   set_llvm_cfg LLVM_DEFAULT_TARGET_TRIPLE "${ARCH}-pc-windows-gnu"
   # Default the MinGW driver to LLVM runtime libraries to match windows-gnullvm
   set_llvm_cfg CLANG_DEFAULT_RTLIB compiler-rt

@@ -133,6 +133,7 @@ common_config_llvm() {
   set_llvm_cfg CLANG_PYTHON_BINDINGS_VERSIONS 3
   set_llvm_cfg CMAKE_PLATFORM_NO_VERSIONED_SONAME ON
   set_llvm_cfg LLVM_TARGET_ARCH $ARCH
+  set_llvm_cfg LLVM_HOST_TRIPLE $TRIPLE
   set_llvm_cfg LLVM_DEFAULT_TARGET_TRIPLE $TRIPLE
   set_llvm_cfg LLVM_ENABLE_ZLIB FORCE_ON
   set_llvm_cfg ZLIB_LIBRARY "$(realpath ../../zlib/lib/libz.a)"

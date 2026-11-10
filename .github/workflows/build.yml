@@ -90,79 +90,13 @@ jobs:
           path: dist\*.tar.xz
           archive: false
 
-  macos-x64-llvm:
-    name: Build LLVM for macOS (x86_64)
-    runs-on: macos-26-intel
-
-    steps:
-      - name: Check out
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 1
-
-      - name: Set up Python 3
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.x"
-
-      - name: Build LLVM
-        run: |
-          brew reinstall ninja binutils gpatch
-          ./build.sh clone-llvm build-llvm
-          rm -rf out/llvm/build
-          mkdir tmp
-          tar c out/llvm | xz --x86 --lzma2 > tmp/llvm.x64.tar.xz
-
-      - name: Upload LLVM artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: macos-x64-llvm
-          path: tmp/*.tar.xz
-
-  macos-x64:
-    name: Build for macOS (x86_64)
-    runs-on: macos-26-intel
-    needs: [macos-x64-llvm]
-
-    steps:
-      - name: Check out
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 1
-
-      - name: Set up Python 3
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.x"
-
-      - name: Download LLVM artifacts
-        uses: actions/download-artifact@v8
-        with:
-          name: macos-x64-llvm
-          path: tmp
-
-      - name: Build toolchain
-        run: |
-          xz -d < tmp/llvm.x64.tar.xz | tar x
-          rm tmp/llvm.x64.tar.xz
-          brew reinstall ninja binutils gpatch
-          ./build.sh clone build-tools build-rust collect ndk dist
-
-      - name: Remove LLVM artifact
-        uses: geekyeggo/delete-artifact@v5
-        with:
-          name: macos-x64-llvm
-          failOnError: false
-
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v7
-        with:
-          path: dist/*.tar.xz
-          archive: false
-
-  macos-arm64:
-    name: Build for macOS (aarch64)
+  macos:
+    name: Build for macOS (${{ matrix.arch }})
     runs-on: macos-26
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x86_64, aarch64]
 
     steps:
       - name: Check out
@@ -176,6 +110,8 @@ jobs:
           python-version: "3.x"
 
       - name: Build toolchain
+        env:
+          ARCH: ${{ matrix.arch }}
         run: |
           brew reinstall ninja binutils gpatch
           ./build.sh
