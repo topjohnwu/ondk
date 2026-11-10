@@ -43,7 +43,7 @@ jobs:
           sudo ./llvm.sh 22
           sudo apt-get -y install libc++-22-dev libc++abi-22-dev
           rm llvm.sh
-          ./build.sh
+          ./build.py
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v7
@@ -78,16 +78,16 @@ jobs:
         with:
           msystem: ${{ matrix.msystem }}
           update: true
-          install: make diffutils tar patch unzip gzip
-          pacboy: 7zip:p cmake:p ninja:p clang:p lld:p libc++:p python:p
+          install: tar patch unzip
+          pacboy: cmake:p ninja:p clang:p lld:p libc++:p python:p
 
       - name: Build toolchain
-        run: bash build-windows.sh
+        run: ./build.py
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v7
         with:
-          path: dist\*.tar.xz
+          path: dist/*.tar.xz
           archive: false
 
   macos:
@@ -114,7 +114,7 @@ jobs:
           ARCH: ${{ matrix.arch }}
         run: |
           brew reinstall ninja binutils gpatch
-          ./build.sh
+          ./build.py
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v7
