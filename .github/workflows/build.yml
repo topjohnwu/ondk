@@ -37,7 +37,7 @@ jobs:
       - name: Build toolchain
         run: |
           sudo apt-get update
-          sudo apt-get -y install cmake ninja-build zlib1g-dev binutils-dev yasm
+          sudo apt-get -y install cmake ninja-build binutils-dev yasm
           wget https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
           sudo ./llvm.sh 22
@@ -79,7 +79,7 @@ jobs:
           msystem: ${{ matrix.msystem }}
           update: true
           install: make diffutils tar patch unzip gzip
-          pacboy: 7zip:p cmake:p ninja:p zlib:p clang:p lld:p libc++:p yasm:p make:p python:p
+          pacboy: 7zip:p cmake:p ninja:p clang:p lld:p libc++:p yasm:p make:p python:p
 
       - name: Build toolchain
         run: bash build-windows.sh

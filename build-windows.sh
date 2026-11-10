@@ -80,7 +80,6 @@ config_llvm() {
   set_llvm_cfg CMAKE_CXX_COMPILER clang++
   set_llvm_cfg LLVM_USE_LINKER lld
   set_llvm_cfg LLVM_ENABLE_LIBCXX ON
-  set_llvm_cfg ZLIB_USE_STATIC_LIBS ON
   set_llvm_cfg LLVM_ENABLE_PLUGINS OFF
   set_llvm_cfg LLVM_USE_SYMLINKS ON
   # LLVM does not recognize Rust's 'windows-gnullvm' environment name in triples
@@ -120,6 +119,7 @@ build_builtins() {
 }
 
 build_llvm() {
+  build_zlib
   build_zstd
 
   mkdir -p out/llvm/build

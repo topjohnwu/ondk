@@ -76,6 +76,7 @@ build_tools() {
 }
 
 build_llvm() {
+  build_zlib
   build_zstd
 
   mkdir -p out/llvm/build
@@ -92,7 +93,6 @@ build_llvm() {
     set_llvm_cfg LLVM_USE_LINKER lld
     set_llvm_cfg LLVM_STATIC_LINK_CXX_STDLIB ON
     set_llvm_cfg LLVM_ENABLE_LIBCXX ON
-    set_llvm_cfg ZLIB_USE_STATIC_LIBS ON
   fi
 
   set_llvm_cfg LLVM_ENABLE_PROJECTS "clang;lld;clang-tools-extra;polly;bolt"

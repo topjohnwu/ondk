@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 RUST_VERSION='1.97.1'
+ZLIB_VERSION='2.3.3'
 
 NDK_VERSION='r30-beta2'
 NDK_DIR_VERSION=$NDK_VERSION
@@ -77,12 +78,13 @@ skip_submodule() {
 }
 
 clone_llvm() {
-  rm -rf src/llvm-project src/llvm_android src/toolchain-utils src/zstd
+  rm -rf src/llvm-project src/llvm_android src/toolchain-utils src/zstd src/zlib
 
   git_clone_sha https://android.googlesource.com/toolchain/llvm-project $LLVM_VERSION
   git_clone_sha https://android.googlesource.com/toolchain/llvm_android $LLVM_ANDROID_VERSION
   git_clone_sha https://android.googlesource.com/platform/external/toolchain-utils $TOOLCHAIN_UTILS_VERSION
   git_clone_sha https://android.googlesource.com/platform/external/zstd $ZSTD_VERSION
+  git_clone_branch https://github.com/zlib-ng/zlib-ng $ZLIB_VERSION zlib
 
   # Patch the LLVM source code
   local llvm_svn=$(sed -n "s/^_svn_revision = 'r\([0-9]*\).*'/\1/p" src/llvm_android/src/llvm_android/android_version.py)
@@ -173,6 +175,8 @@ common_config_llvm() {
   set_llvm_cfg LLVM_TARGET_ARCH $ARCH
   set_llvm_cfg LLVM_DEFAULT_TARGET_TRIPLE $TRIPLE
   set_llvm_cfg LLVM_ENABLE_ZLIB FORCE_ON
+  set_llvm_cfg ZLIB_LIBRARY "$(realpath ../../zlib/lib/libz.a)"
+  set_llvm_cfg ZLIB_INCLUDE_DIR "$(realpath ../../zlib/include)"
   set_llvm_cfg LLVM_ENABLE_LIBXML2 OFF
   set_llvm_cfg LLVM_ENABLE_ZSTD FORCE_ON
   set_llvm_cfg LLVM_USE_STATIC_ZSTD ON
@@ -198,6 +202,20 @@ common_config_tools() {
   set_tools_cfg CMAKE_INSTALL_PREFIX "$(realpath ..)"
   set_tools_cfg CMAKE_POLICY_VERSION_MINIMUM 3.5
   config_tools_build
+}
+
+build_zlib() {
+  mkdir -p out/zlib/build
+  cd out/zlib/build
+  common_config_tools
+  set_tools_cfg CMAKE_INSTALL_LIBDIR lib
+  set_tools_cfg CMAKE_POSITION_INDEPENDENT_CODE ON
+  set_tools_cfg ZLIB_COMPAT ON
+  set_tools_cfg BUILD_SHARED_LIBS OFF
+  set_tools_cfg BUILD_TESTING OFF
+  eval cmake -G Ninja ../../../src/zlib $TOOLS_CMAKE_CFG
+  cmake --build . --target install
+  cd ../../../
 }
 
 build_zstd() {
@@ -356,13 +374,13 @@ run_cmd() {
       clone_rust
       ;;
     build)
-      rm -rf out/llvm out/lld out/zstd out/tools
+      rm -rf out/llvm out/lld out/zlib out/zstd out/tools
       build_llvm
       build_tools
       build_rust
       ;;
     build-llvm)
-      rm -rf out/llvm out/lld out/zstd
+      rm -rf out/llvm out/lld out/zlib out/zstd
       build_llvm
       ;;
     build-tools)
