@@ -71,6 +71,8 @@ build_toolbox() {
 
 build_tools() {
   build_shaderc
+  build_make
+  build_yasm
   build_toolbox
 }
 
@@ -153,8 +155,6 @@ collect() {
   ln -srf llvm-bin/libLLVM*.dll llvm-bin/libclang-cpp.dll bin
   cp -af ../tools/bin tools-bin
   rm -f tools-bin/*.dll
-  cp -af $MINGW_PREFIX/bin/yasm.exe tools-bin
-  cp -af $MINGW_PREFIX/bin/mingw32-make.exe tools-bin/make.exe
 
   # Copy MinGW static libraries and stage compiler-rt builtins for self-contained host linking
   local SELF_CONTAINED_LIB=lib/rustlib/$TRIPLE/lib/self-contained
@@ -176,8 +176,6 @@ collect() {
     cp_sys_dlls bin/rustc.exe
   )
   cp_sys_dlls llvm-bin/clang.exe
-  cp_sys_dlls tools-bin/yasm.exe
-  cp_sys_dlls tools-bin/make.exe
 
   ln -srf bin/std-*.dll lib/rustlib/$TRIPLE/lib
 
@@ -198,10 +196,6 @@ ndk() {
 
   # First copy over all runtime dlls and deduplicate with symlinks
   cp -af rust/llvm-bin/*.dll $LLVM_DIR/bin
-  for dll in rust/tools-bin/*.dll; do
-    mv -f $dll $LLVM_DIR/bin
-    ln -srf $LLVM_DIR/bin/$(basename $dll) ../prebuilt/$NDK_DIRNAME/bin
-  done
   for dll in rust/bin/*.dll; do
     if [ -f $LLVM_DIR/bin/$(basename $dll) ]; then
       ln -srf $LLVM_DIR/bin/$(basename $dll) $dll

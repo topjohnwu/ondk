@@ -137,6 +137,8 @@ def clone_tools(ndk_tag: str, os_name: str):
     clone_bundle('platform/external/shaderc/glslang', ndk_tag, 'shaderc/third_party/glslang')
     clone_bundle('platform/external/shaderc/spirv-headers', ndk_tag, 'shaderc/third_party/spirv-headers')
     clone_bundle('platform/external/shaderc/spirv-tools', ndk_tag, 'shaderc/third_party/spirv-tools')
+    clone_bundle('toolchain/make', ndk_tag)
+    clone_bundle('toolchain/yasm', ndk_tag)
     if os_name == 'windows':
         clone_bundle('platform/ndk', ndk_tag)
 

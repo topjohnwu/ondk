@@ -73,6 +73,8 @@ config_tools_build() {
 
 build_tools() {
   build_shaderc
+  build_make
+  build_yasm
 }
 
 build_llvm() {
@@ -112,14 +114,7 @@ collect() {
   find . -name '*.old' -delete
   cp -af ../llvm/bin llvm-bin
   cp -af ../tools/bin tools-bin
-  cp -aLf $(which yasm) tools-bin
-  if [ $OS = "darwin" ]; then
-    cp -aLf $(which gmake) tools-bin/make
-  else
-    cp -aLf $(which make) tools-bin/make
-  fi
   find ../llvm/lib -name "*.${DYN_EXT}*" -exec cp -an {} lib \;
-  chmod -R u+w tools-bin
   strip_exe
   cd ../../
 }

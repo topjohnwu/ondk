@@ -63,8 +63,9 @@ clone_llvm() {
 }
 
 clone_tools() {
-  rm -rf src/shaderc src/ndk
+  rm -rf src/shaderc src/make src/yasm src/ndk
   ./clone_aosp.py tools $NDK_VERSION $OS
+  patch -p1 -d src/yasm < patches/fix_yasm_cmake.patch
 }
 
 clone_rust() {
@@ -199,6 +200,28 @@ build_shaderc() {
   set_tools_cfg SHADERC_SKIP_COPYRIGHT_CHECK ON
   set_tools_cfg SPIRV-Headers_SOURCE_DIR "$(realpath ../../../src/shaderc/third_party/spirv-headers)"
   eval cmake -G Ninja ../../../src/shaderc $TOOLS_CMAKE_CFG
+  cmake --build . --target install
+  cd ../../../
+}
+
+build_make() {
+  mkdir -p out/tools/build-make
+  cd out/tools/build-make
+  common_config_tools
+  set_tools_cfg CMAKE_C_STANDARD 17
+  eval cmake -G Ninja ../../../src/make $TOOLS_CMAKE_CFG
+  cmake --build . --target install
+  cd ../../../
+}
+
+build_yasm() {
+  mkdir -p out/tools/build-yasm
+  cd out/tools/build-yasm
+  common_config_tools
+  set_tools_cfg CMAKE_C_STANDARD 17
+  set_tools_cfg BUILD_SHARED_LIBS OFF
+  set_tools_cfg YASM_BUILD_TESTS OFF
+  eval cmake -G Ninja ../../../src/yasm $TOOLS_CMAKE_CFG
   cmake --build . --target install
   cd ../../../
 }
