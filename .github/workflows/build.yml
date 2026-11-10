@@ -37,7 +37,7 @@ jobs:
       - name: Build toolchain
         run: |
           sudo apt-get update
-          sudo apt-get -y install cmake ninja-build libzstd-dev zlib1g-dev binutils-dev yasm
+          sudo apt-get -y install cmake ninja-build zlib1g-dev binutils-dev yasm
           wget https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
           sudo ./llvm.sh 22
@@ -79,7 +79,7 @@ jobs:
           msystem: ${{ matrix.msystem }}
           update: true
           install: make diffutils tar patch unzip gzip
-          pacboy: 7zip:p cmake:p ninja:p zstd:p zlib:p clang:p lld:p libc++:p yasm:p make:p python:p
+          pacboy: 7zip:p cmake:p ninja:p zlib:p clang:p lld:p libc++:p yasm:p make:p python:p
 
       - name: Build toolchain
         run: bash build-windows.sh
@@ -107,7 +107,7 @@ jobs:
 
       - name: Build LLVM
         run: |
-          brew reinstall ninja zstd binutils gpatch
+          brew reinstall ninja binutils gpatch
           ./build.sh clone-llvm build-llvm
           rm -rf out/llvm/build
           mkdir tmp
@@ -145,7 +145,7 @@ jobs:
         run: |
           xz -d < tmp/llvm.x64.tar.xz | tar x
           rm tmp/llvm.x64.tar.xz
-          brew reinstall ninja zstd binutils gpatch yasm make
+          brew reinstall ninja binutils gpatch yasm make
           ./build.sh clone build-tools build-rust collect ndk dist
 
       - name: Remove LLVM artifact
@@ -177,7 +177,7 @@ jobs:
 
       - name: Build toolchain
         run: |
-          brew reinstall ninja zstd binutils gpatch yasm make
+          brew reinstall ninja binutils gpatch yasm make
           ./build.sh
 
       - name: Upload build artifact

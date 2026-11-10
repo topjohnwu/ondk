@@ -120,6 +120,8 @@ build_builtins() {
 }
 
 build_llvm() {
+  build_zstd
+
   mkdir -p out/llvm/build
   cd out/llvm/build
 

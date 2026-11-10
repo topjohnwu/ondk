@@ -76,6 +76,8 @@ build_tools() {
 }
 
 build_llvm() {
+  build_zstd
+
   mkdir -p out/llvm/build
   cd out/llvm/build
 

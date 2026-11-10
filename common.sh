@@ -12,6 +12,7 @@ NDK_DIR_VERSION=$NDK_VERSION
 LLVM_VERSION='9f872551d3c681d06fd303b36f16ed5c274735eb'
 LLVM_ANDROID_VERSION='cbd9e7f4da965e4be38f3f9b340d06678ac69fce'
 TOOLCHAIN_UTILS_VERSION='9b4f94761eea83b6edd1b59f485cddff6bd01b38'
+ZSTD_VERSION='90212406d77e2b80b0ef0cb6ebcf2f4baf81e02f'
 
 OUTPUT_VERSION='r30.1'
 
@@ -76,11 +77,12 @@ skip_submodule() {
 }
 
 clone_llvm() {
-  rm -rf src/llvm-project src/llvm_android src/toolchain-utils
+  rm -rf src/llvm-project src/llvm_android src/toolchain-utils src/zstd
 
   git_clone_sha https://android.googlesource.com/toolchain/llvm-project $LLVM_VERSION
   git_clone_sha https://android.googlesource.com/toolchain/llvm_android $LLVM_ANDROID_VERSION
   git_clone_sha https://android.googlesource.com/platform/external/toolchain-utils $TOOLCHAIN_UTILS_VERSION
+  git_clone_sha https://android.googlesource.com/platform/external/zstd $ZSTD_VERSION
 
   # Patch the LLVM source code
   local llvm_svn=$(sed -n "s/^_svn_revision = 'r\([0-9]*\).*'/\1/p" src/llvm_android/src/llvm_android/android_version.py)
@@ -174,6 +176,8 @@ common_config_llvm() {
   set_llvm_cfg LLVM_ENABLE_LIBXML2 OFF
   set_llvm_cfg LLVM_ENABLE_ZSTD FORCE_ON
   set_llvm_cfg LLVM_USE_STATIC_ZSTD ON
+  set_llvm_cfg zstd_LIBRARY "$(realpath ../../zstd/lib/libzstd.a)"
+  set_llvm_cfg zstd_INCLUDE_DIR "$(realpath ../../zstd/include)"
   set_llvm_cfg LLVM_INCLUDE_TESTS OFF
   set_llvm_cfg LLVM_ENABLE_LIBEDIT OFF
   set_llvm_cfg LLVM_ENABLE_TERMINFO OFF
@@ -194,6 +198,19 @@ common_config_tools() {
   set_tools_cfg CMAKE_INSTALL_PREFIX "$(realpath ..)"
   set_tools_cfg CMAKE_POLICY_VERSION_MINIMUM 3.5
   config_tools_build
+}
+
+build_zstd() {
+  mkdir -p out/zstd/build
+  cd out/zstd/build
+  common_config_tools
+  set_tools_cfg CMAKE_INSTALL_LIBDIR lib
+  set_tools_cfg CMAKE_POSITION_INDEPENDENT_CODE ON
+  set_tools_cfg ZSTD_BUILD_PROGRAMS OFF
+  set_tools_cfg ZSTD_BUILD_SHARED OFF
+  eval cmake -G Ninja ../../../src/zstd/build/cmake $TOOLS_CMAKE_CFG
+  cmake --build . --target install
+  cd ../../../
 }
 
 build_shaderc() {
@@ -339,13 +356,13 @@ run_cmd() {
       clone_rust
       ;;
     build)
-      rm -rf out/llvm out/lld out/tools
+      rm -rf out/llvm out/lld out/zstd out/tools
       build_llvm
       build_tools
       build_rust
       ;;
     build-llvm)
-      rm -rf out/llvm out/lld
+      rm -rf out/llvm out/lld out/zstd
       build_llvm
       ;;
     build-tools)
