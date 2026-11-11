@@ -18,9 +18,11 @@ import shutil
 import stat
 import subprocess
 import sys
+import time
 import tomllib
 import types
 from typing import Any
+import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
 
@@ -111,6 +113,8 @@ def copy_symlink(src_link: Path, dst_link: Path):
 def symlink_rel(target: Path, link: Path, *, is_dir: bool | None = None):
     rm_rf(link)
     rel = os.path.relpath(target, link.parent)
+    if os.name == 'nt':
+        rel = rel.replace('/', '\\')
     link.symlink_to(rel, target_is_directory=target.is_dir() if is_dir is None else is_dir)
 
 
@@ -186,14 +190,31 @@ def dump_toml(data: dict[str, Any], prefix: str = '') -> str:
     return '\n\n'.join(blocks) + '\n'
 
 
+def gitiles_fetch(url: str, retries: int = 5) -> bytes:
+    for attempt in range(retries):
+        try:
+            with urllib.request.urlopen(url, timeout=30) as resp:
+                return resp.read()
+        except urllib.error.HTTPError as e:
+            retry_after = e.headers.get('Retry-After') if e.headers else None
+            e.close()
+            if e.code not in (429, 500, 502, 503, 504) or attempt == retries - 1:
+                raise
+            delay = int(retry_after) if retry_after and retry_after.isdigit() else 2 ** attempt
+        except (urllib.error.URLError, TimeoutError, OSError):
+            if attempt == retries - 1:
+                raise
+            delay = 2 ** attempt
+        time.sleep(delay)
+    raise AssertionError('unreachable')
+
+
 def gitiles_text(path: str) -> str:
-    with urllib.request.urlopen(f'{AOSP_URL}/{path}?format=TEXT') as resp:
-        return base64.b64decode(resp.read()).decode('utf-8')
+    return base64.b64decode(gitiles_fetch(f'{AOSP_URL}/{path}?format=TEXT')).decode('utf-8')
 
 
 def gitiles_json(path: str) -> dict:
-    with urllib.request.urlopen(f'{AOSP_URL}/{path}?format=JSON') as resp:
-        data = resp.read().decode('utf-8')
+    data = gitiles_fetch(f'{AOSP_URL}/{path}?format=JSON').decode('utf-8')
     return json.loads(data.split('\n', 1)[1])  # Strip Gitiles ")]}'\n" prefix
 
 
