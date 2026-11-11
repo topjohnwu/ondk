@@ -305,7 +305,10 @@ class Host:
                     yield p
 
     def strip_binaries(self):
-        targets = [p.relative_to(ONDK_DIR) for p in self.iter_host_binaries()]
+        targets = [
+            p.relative_to(ONDK_DIR) for p in self.iter_host_binaries()
+            if not re.match(r'^(lib)?std-[0-9a-f]+\.', p.name)
+        ]
         if targets:
             run([*self.strip_cmd(), *targets], cwd=ONDK_DIR)
 

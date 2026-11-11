@@ -27,3 +27,5 @@ lto = "thin"
 strip = false
 lld = true
 codegen-units = 1
+debuginfo-level-std = 1
+remap-debuginfo = true
