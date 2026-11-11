@@ -25,5 +25,5 @@ sysconfdir = "etc"
 channel = "nightly"
 lto = "thin"
 strip = false
-lld = false
+lld = true
 codegen-units = 1

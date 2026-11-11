@@ -1,0 +1,15 @@
+diff --git a/src/bootstrap/src/core/config/config.rs b/src/bootstrap/src/core/config/config.rs
+index b933e668..290bd4e2 100644
+--- a/src/bootstrap/src/core/config/config.rs
++++ b/src/bootstrap/src/core/config/config.rs
+@@ -1103,10 +1103,6 @@ impl Config {
+             );
+         }
+
+-        if lld_enabled && is_host_system_llvm {
+-            panic!("Cannot enable LLD with `rust.lld = true` when using external llvm-config.");
+-        }
+-
+         let download_rustc = download_rustc_commit.is_some();
+
+         let stage = match flags_cmd {

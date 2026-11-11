@@ -6,7 +6,7 @@ import argparse
 import ast
 import base64
 from collections import deque
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import json
@@ -288,14 +288,24 @@ class Host:
         raise NotImplementedError
 
     def strip_cmd(self) -> list[str | Path]:
-        return [OUT_DIR / f'llvm/bin/llvm-strip{self.exe_suffix}', '-s']
+        return [OUT_DIR / f'llvm/bin/llvm-strip{self.exe_suffix}', '--strip-all-gnu']
 
-    def strip_binaries(self, dirs: list[Path]):
-        targets = [
-            p.relative_to(ONDK_DIR)
-            for d in dirs if d.is_dir()
-            for p in d.iterdir() if self.is_host_binary(p)
-        ]
+    def iter_host_binaries(self) -> Iterator[Path]:
+        for root, dirs, files in os.walk(ONDK_DIR, followlinks=False):
+            rel_root = Path(root).relative_to(ONDK_DIR)
+            dirs[:] = [
+                d for d in dirs
+                if d != 'sysroot'
+                and (rel_root / d).as_posix() not in ('simpleperf/bin/android', 'toolchains/rust/lib/rustlib/src')
+                and not (rel_root / d).as_posix().endswith('/lib/clang')
+            ]
+            for f in files:
+                p = Path(root) / f
+                if self.is_host_binary(p):
+                    yield p
+
+    def strip_binaries(self):
+        targets = [p.relative_to(ONDK_DIR) for p in self.iter_host_binaries()]
         if targets:
             run([*self.strip_cmd(), *targets], cwd=ONDK_DIR)
 
@@ -367,7 +377,7 @@ class Host:
             git('config', 'set', '-f', '.gitmodules', f'submodule.{sub}.update', 'none', cwd=rust_dir)
         git('submodule', 'update', '--init', '--depth=1', cwd=rust_dir)
 
-        for patch_name in ('support_ndk_llvm_r30.patch', 'support_static_libcxx.patch'):
+        for patch_name in ('support_ndk_llvm_r30.patch', 'support_static_libcxx.patch', 'support_external_lld.patch'):
             apply_patch(rust_dir, PATCHES_DIR / patch_name)
 
         symlink_rel(SRC_DIR / 'llvm-project', rust_dir / 'src/llvm-project', is_dir=True)
@@ -531,20 +541,13 @@ class Host:
         rm_glob(prebuilt_bin, 'ndk-gdb*', 'ndkgdb.pyz', 'ndk-stack*', 'ndkstack.pyz',
                 'yasm*', 'ytasm*', 'vsyasm*')
 
-        orig_hashes: dict[Path, str] = {}
-        for root, dirs, files in os.walk(ONDK_DIR, followlinks=False):
-            rel_root = Path(root).relative_to(ONDK_DIR)
-            dirs[:] = [
-                d for d in dirs
-                if d != 'sysroot'
-                and (rel_root / d).as_posix() != 'simpleperf/bin/android'
-                and not (rel_root / d).as_posix().endswith('/lib/clang')
-            ]
-            for f in files:
-                p = Path(root) / f
-                if self.is_host_binary(p):
-                    orig_hashes[p] = sha256_file(p)
-        return orig_hashes
+        return {p: sha256_file(p) for p in self.iter_host_binaries()}
+
+    def link_rustlib_tools(self, rust_dir: Path, llvm_dir: Path):
+        rustlib_bin = rust_dir / f'lib/rustlib/{self.triple}/bin'
+        llvm_bin = llvm_dir / 'bin'
+        symlink_rel(llvm_bin / f'lld{self.exe_suffix}', rustlib_bin / f'rust-lld{self.exe_suffix}')
+        symlink_rel(llvm_bin / f'llvm-objcopy{self.exe_suffix}', rustlib_bin / f'rust-objcopy{self.exe_suffix}')
 
     def wire_ndk_toolchains(self, rust_dir: Path, llvm_dir: Path):
         """Unix default: stage libLLVM/libclang shared libs in rust/lib and symlink into llvm/lib."""
@@ -558,6 +561,7 @@ class Host:
                     copy_file(lib, dst)
         for lib in (rust_dir / 'lib').glob(f'*.{self.dyn_ext}*'):
             symlink_rel(lib, llvm_dir / 'lib' / lib.name)
+        self.link_rustlib_tools(rust_dir, llvm_dir)
 
     def package(self):
         orig_hashes = self.prepare_ndk()
@@ -598,8 +602,8 @@ class Host:
                     print(f'  {p.relative_to(ROOT)}', file=sys.stderr)
             sys.exit(1)
 
-        # Strip only the host binaries actually shipped in the final ONDK tree
-        self.strip_binaries([rust_dir / 'bin', rust_dir / 'lib', llvm_dir / 'bin', prebuilt_bin, shader_tools])
+        # Strip all host binaries shipped in the final ONDK tree
+        self.strip_binaries()
 
     def dist(self):
         if not ONDK_DIR.is_dir():
@@ -639,7 +643,11 @@ class LinuxHost(Host):
         if path.is_symlink() or not path.is_file():
             return False
         with path.open('rb') as f:
-            return f.read(4) == b'\x7fELF'
+            hdr = f.read(18)
+        if len(hdr) < 18 or hdr[:4] != b'\x7fELF':
+            return False
+        endian = 'little' if hdr[5] == 1 else 'big'
+        return int.from_bytes(hdr[16:18], endian) in (2, 3)  # ET_EXEC, ET_DYN
 
     def tools_cmake_cfg(self, prefix: Path) -> dict[str, str | Path]:
         cfg = super().tools_cmake_cfg(prefix)
@@ -699,13 +707,22 @@ class DarwinHost(Host):
         if path.is_symlink() or not path.is_file():
             return False
         with path.open('rb') as f:
-            hdr = f.read(8)
-        if hdr[:4] in (b'\xfe\xed\xfa\xce', b'\xce\xfa\xed\xfe', b'\xfe\xed\xfa\xcf', b'\xcf\xfa\xed\xfe'):
-            return True
-        if hdr[:4] in (b'\xca\xfe\xba\xbe', b'\xbe\xba\xfe\xca') and len(hdr) == 8:
-            narch = int.from_bytes(hdr[4:8], 'big' if hdr[:4] == b'\xca\xfe\xba\xbe' else 'little')
-            return 1 <= narch < 32
-        return False
+            hdr = f.read(24)
+            if len(hdr) >= 20 and hdr[:4] == b'\xca\xfe\xba\xbe' and 1 <= int.from_bytes(hdr[4:8], 'big') < 32:
+                f.seek(int.from_bytes(hdr[16:20], 'big'))
+                hdr = f.read(16)
+            elif len(hdr) == 24 and hdr[:4] == b'\xca\xfe\xba\xbf' and 1 <= int.from_bytes(hdr[4:8], 'big') < 32:
+                f.seek(int.from_bytes(hdr[16:24], 'big'))
+                hdr = f.read(16)
+        if len(hdr) < 16:
+            return False
+        if hdr[:4] in (b'\xfe\xed\xfa\xce', b'\xfe\xed\xfa\xcf'):
+            endian = 'big'
+        elif hdr[:4] in (b'\xce\xfa\xed\xfe', b'\xcf\xfa\xed\xfe'):
+            endian = 'little'
+        else:
+            return False
+        return int.from_bytes(hdr[12:16], endian) in (2, 6, 8)  # MH_EXECUTE, MH_DYLIB, MH_BUNDLE
 
     def strip_cmd(self) -> list[str | Path]:
         return ['strip', '-x']
@@ -854,11 +871,11 @@ class WindowsHost(Host):
         cfg['target'][self.triple] |= {'cc': 'clang', 'cxx': 'clang++', 'linker': 'clang'}
         return cfg
 
-    def bundle_mingw_dlls(self, entry_exe: Path, dest_dir: Path, search_dirs: list[Path]):
+    def bundle_mingw_dlls(self, entry_exe: Path, dest_dir: Path):
         """Statically walk PE import tables via llvm-objdump and copy MinGW runtime DLLs."""
         objdump = OUT_DIR / 'llvm/bin/llvm-objdump.exe'
         mingw_dlls = {p.name.lower(): p for p in (self.mingw_prefix / 'bin').glob('*.dll')}
-        local_maps = [{p.name.lower(): p for p in d.glob('*.dll')} for d in search_dirs]
+        local_map = {p.name.lower(): p for p in dest_dir.glob('*.dll')}
         visited: set[Path] = set()
         queue = deque([entry_exe])
 
@@ -871,21 +888,21 @@ class WindowsHost(Host):
             out = subprocess.check_output([str(objdump), '--private-headers', str(binary)], text=True)
             for match in re.finditer(r'^\s*DLL(?: Name)?:\s*(\S+)', out, re.MULTILINE):
                 dll_lower = match.group(1).lower()
-                # Check ONDK's own toolchain directories first so MSYS2 host LLVM/Clang DLLs
+                # Check dest_dir's own DLLs first so MSYS2 host LLVM/Clang DLLs
                 # (e.g. libclang-cpp.dll in MINGW_PREFIX/bin) never shadow our built DLLs.
-                local_hit = next((m[dll_lower] for m in local_maps if dll_lower in m), None)
-                if local_hit is not None:
-                    queue.append(local_hit)
+                if dll_lower in local_map:
+                    queue.append(local_map[dll_lower])
                 elif dll_lower in mingw_dlls:
                     src_dll = mingw_dlls[dll_lower]
                     dst_dll = dest_dir / src_dll.name
-                    if not (dst_dll.exists() or dst_dll.is_symlink()):
-                        copy_file(src_dll, dst_dll)
+                    copy_file(src_dll, dst_dll)
+                    local_map[dll_lower] = dst_dll
                     queue.append(src_dll)
 
     def wire_ndk_toolchains(self, rust_dir: Path, llvm_dir: Path):
         llvm_bin = llvm_dir / 'bin'
         rust_bin = rust_dir / 'bin'
+        rustlib_bin = rust_dir / f'lib/rustlib/{self.triple}/bin'
 
         # 1. Install Clang/LLVM binaries and runtime DLLs into llvm/bin
         for name in ('lld.exe', 'lld-link.exe', 'ld64.lld.exe'):
@@ -894,18 +911,23 @@ class WindowsHost(Host):
         symlink_rel(llvm_bin / 'lld.exe', llvm_bin / 'ld.exe')
         for dll in (OUT_DIR / 'llvm/bin').glob('*.dll'):
             copy_file(dll, llvm_bin / dll.name)
+        self.link_rustlib_tools(rust_dir, llvm_dir)
 
-        # 2. Bundle MinGW runtime DLLs and deduplicate shared DLLs in rust/bin via symlinks
-        self.bundle_mingw_dlls(llvm_bin / 'clang.exe', llvm_bin, [llvm_bin])
+        # 2. Bundle MinGW runtime DLLs and deduplicate shared DLLs via symlinks
+        self.bundle_mingw_dlls(llvm_bin / 'clang.exe', llvm_bin)
         for pat in ('libLLVM*.dll', 'libclang-cpp.dll'):
             for dll in llvm_bin.glob(pat):
                 symlink_rel(dll, rust_bin / dll.name)
+        for dll in llvm_bin.glob('libLLVM*.dll'):
+            symlink_rel(dll, rustlib_bin / dll.name)
 
-        self.bundle_mingw_dlls(rust_bin / 'rustc.exe', rust_bin, [rust_bin, llvm_bin])
-        for dll in rust_bin.glob('*.dll'):
-            shared = llvm_bin / dll.name
-            if not dll.is_symlink() and shared.is_file():
-                symlink_rel(shared, dll)
+        self.bundle_mingw_dlls(rust_bin / 'rustc.exe', rust_bin)
+        self.bundle_mingw_dlls(rustlib_bin / 'rust-lld.exe', rustlib_bin)
+        for d in (rust_bin, rustlib_bin):
+            for dll in d.glob('*.dll'):
+                shared = llvm_bin / dll.name
+                if not dll.is_symlink() and shared.is_file():
+                    symlink_rel(shared, dll)
 
         # 3. Stage Rust std DLLs, MinGW self-contained static libs, and compiler-rt builtins
         rustlib_dir = rust_dir / f'lib/rustlib/{self.triple}/lib'
