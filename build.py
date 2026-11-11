@@ -26,6 +26,7 @@ import xml.etree.ElementTree as ET
 
 RUST_VERSION = '1.97.1'
 ZLIB_VERSION = '2.3.3'
+YASM_COMMIT = '09d1bc90ed53d0ec3e9b074f111058cbf262ed56'
 NDK_VERSION = 'r30-beta2'
 OUTPUT_VERSION = 'r30.1'
 
@@ -331,14 +332,17 @@ class Host:
             rm_rf(SRC_DIR / name)
 
         ndk_tag = f'ndk-{NDK_VERSION}'
-        top_repos = ['platform/external/shaderc/shaderc', 'toolchain/make', 'toolchain/yasm', *self.extra_tool_repos()]
-        parallel(*(lambda r=repo: clone_bundle(r, ndk_tag) for repo in top_repos))
+        top_repos = ['platform/external/shaderc/shaderc', 'toolchain/make', *self.extra_tool_repos()]
+        parallel(
+            *(lambda r=repo: clone_bundle(r, ndk_tag) for repo in top_repos),
+            lambda: clone_sha('https://github.com/yasm/yasm', YASM_COMMIT),
+        )
         parallel(
             lambda: clone_bundle('platform/external/shaderc/glslang', ndk_tag, 'shaderc/third_party/glslang'),
             lambda: clone_bundle('platform/external/shaderc/spirv-headers', ndk_tag, 'shaderc/third_party/spirv-headers'),
             lambda: clone_bundle('platform/external/shaderc/spirv-tools', ndk_tag, 'shaderc/third_party/spirv-tools'),
         )
-        apply_patch(SRC_DIR / 'yasm', PATCHES_DIR / 'fix_yasm_cmake.patch')
+        apply_patch(SRC_DIR / 'make', PATCHES_DIR / 'fix_make_glibc.patch')
 
     def clone_rust(self):
         rust_dir = SRC_DIR / 'rust'
@@ -373,7 +377,7 @@ class Host:
                 'SPIRV-Headers_SOURCE_DIR': SRC_DIR / 'shaderc/third_party/spirv-headers',
             }),
             ('make', 'build-make', {'CMAKE_C_STANDARD': '17'}),
-            ('yasm', 'build-yasm', {'CMAKE_C_STANDARD': '17', 'BUILD_SHARED_LIBS': 'OFF', 'YASM_BUILD_TESTS': 'OFF'}),
+            ('yasm', 'build-yasm', {'BUILD_SHARED_LIBS': 'OFF', 'YASM_BUILD_TESTS': 'OFF'}),
         ]
         for src_name, build_name, extra in specs:
             self.cmake_install(SRC_DIR / src_name, tools_out / build_name, self.tools_cmake_cfg(tools_out) | extra)

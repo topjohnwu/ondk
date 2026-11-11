@@ -1,0 +1,13 @@
+diff --git a/soong/linux_glibc/config.h b/soong/linux_glibc/config.h
+index b30e764b..ed4cfaa0 100644
+--- a/soong/linux_glibc/config.h
++++ b/soong/linux_glibc/config.h
+@@ -232,7 +232,7 @@
+ 
+ /* Define to 1 if you have the declaration of `bsd_signal', and to 0 if you
+    don't. */
+-#define HAVE_DECL_BSD_SIGNAL 1
++#define HAVE_DECL_BSD_SIGNAL 0
+ 
+ /* Define to 1 if you have the declaration of `dlerror', and to 0 if you
+    don't. */
