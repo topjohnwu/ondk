@@ -802,8 +802,6 @@ class WindowsHost(Host):
 
     def llvm_cmake_cfg(self, prefix: Path) -> dict[str, str | Path]:
         cfg = super().llvm_cmake_cfg(prefix)
-        # BUG: latest LLVM shipped with MSYS2 cannot build with LTO
-        cfg.pop('LLVM_ENABLE_LTO', None)
         win_gnu_triple = f'{self.arch}-pc-windows-gnu'
         return cfg | {
             'CMAKE_C_COMPILER': 'clang',
