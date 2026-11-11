@@ -285,8 +285,11 @@ class Host:
 
     # -- Clone Stage ----------------------------------------------------------
 
-    def clone_llvm(self):
-        for name in ('llvm-project', 'llvm_android', 'toolchain-utils', 'zstd', 'zlib'):
+    def extra_ndk_repos(self) -> list[str]:
+        return []
+
+    def clone_ndk(self):
+        for name in ('llvm-project', 'llvm_android', 'toolchain-utils', 'zstd', 'zlib', 'shaderc', 'make', 'yasm', 'ndk'):
             rm_rf(SRC_DIR / name)
 
         ndk_tag = f'ndk-{NDK_VERSION}'
@@ -300,17 +303,28 @@ class Host:
         manifest_xml = gitiles_text(f'{prebuilt_path}/{manifest_name}')
         revs = {p.attrib['name']: p.attrib['revision'] for p in ET.fromstring(manifest_xml).findall('project')}
 
+        top_ndk_repos = ['platform/external/shaderc/shaderc', 'toolchain/make', *self.extra_ndk_repos()]
         parallel(
             lambda: clone_bundle('toolchain/llvm_android', revs['toolchain/llvm_android']),
             lambda: clone_bundle('platform/external/toolchain-utils', revs['platform/external/toolchain-utils']),
             lambda: clone_bundle('platform/external/zstd', revs['platform/external/zstd']),
             lambda: git_clone_branch('https://github.com/zlib-ng/zlib-ng', ZLIB_VERSION, 'zlib'),
+            *(lambda r=repo: clone_bundle(r, ndk_tag) for repo in top_ndk_repos),
+            lambda: clone_sha('https://github.com/yasm/yasm', YASM_COMMIT),
         )
 
         sys.path.insert(0, str(SRC_DIR / 'llvm_android/src'))
         from llvm_android import android_version
+        llvm_sha = android_version.get_git_sha()
 
-        clone_sha('https://github.com/llvm/llvm-project', android_version.get_git_sha())
+        parallel(
+            lambda: clone_sha('https://github.com/llvm/llvm-project', llvm_sha),
+            lambda: clone_bundle('platform/external/shaderc/glslang', ndk_tag, 'shaderc/third_party/glslang'),
+            lambda: clone_bundle('platform/external/shaderc/spirv-headers', ndk_tag, 'shaderc/third_party/spirv-headers'),
+            lambda: clone_bundle('platform/external/shaderc/spirv-tools', ndk_tag, 'shaderc/third_party/spirv-tools'),
+        )
+
+        apply_patch(SRC_DIR / 'make', PATCHES_DIR / 'fix_make_glibc.patch')
 
         if os.name == 'nt':
             sys.modules.setdefault('fcntl', types.ModuleType('fcntl'))
@@ -324,26 +338,6 @@ class Host:
         ])
         if rc:
             sys.exit(rc)
-
-    def extra_tool_repos(self) -> list[str]:
-        return []
-
-    def clone_tools(self):
-        for name in ('shaderc', 'make', 'yasm', 'ndk'):
-            rm_rf(SRC_DIR / name)
-
-        ndk_tag = f'ndk-{NDK_VERSION}'
-        top_repos = ['platform/external/shaderc/shaderc', 'toolchain/make', *self.extra_tool_repos()]
-        parallel(
-            *(lambda r=repo: clone_bundle(r, ndk_tag) for repo in top_repos),
-            lambda: clone_sha('https://github.com/yasm/yasm', YASM_COMMIT),
-        )
-        parallel(
-            lambda: clone_bundle('platform/external/shaderc/glslang', ndk_tag, 'shaderc/third_party/glslang'),
-            lambda: clone_bundle('platform/external/shaderc/spirv-headers', ndk_tag, 'shaderc/third_party/spirv-headers'),
-            lambda: clone_bundle('platform/external/shaderc/spirv-tools', ndk_tag, 'shaderc/third_party/spirv-tools'),
-        )
-        apply_patch(SRC_DIR / 'make', PATCHES_DIR / 'fix_make_glibc.patch')
 
     def clone_rust(self):
         rust_dir = SRC_DIR / 'rust'
@@ -452,6 +446,10 @@ class Host:
         cfg = self.llvm_cmake_cfg(llvm_out) | {'LLVM_LINK_LLVM_DYLIB': 'ON'}
         self.cmake_install(SRC_DIR / 'llvm-project/llvm', BUILD_DIR / 'llvm', cfg)
 
+    def build_ndk(self):
+        self.build_llvm()
+        self.build_tools()
+
     def rust_bootstrap_cfg(self, env: dict[str, str]) -> dict[str, Any]:
         cfg = tomllib.loads((ROOT / 'bootstrap.toml').read_text())
         cfg.setdefault('build', {})['build-dir'] = (BUILD_DIR / 'rust').as_posix()
@@ -540,7 +538,7 @@ class Host:
         for lib in (rust_dir / 'lib').glob(f'*.{self.dyn_ext}*'):
             symlink_rel(lib, llvm_dir / 'lib' / lib.name)
 
-    def package_ndk(self):
+    def package(self):
         orig_hashes = self.prepare_ndk()
 
         rust_dir = ONDK_DIR / 'toolchains/rust'
@@ -584,7 +582,7 @@ class Host:
 
     def dist(self):
         if not ONDK_DIR.is_dir():
-            sys.exit(f"Missing {ONDK_DIR}; run 'ndk' action first")
+            sys.exit(f"Missing {ONDK_DIR}; run 'package' action first")
         DIST_DIR.mkdir(parents=True, exist_ok=True)
         archive = DIST_DIR / f'{ONDK_DIR.name}-{self.os_name}-{self.arch}.tar.xz'
 
@@ -759,7 +757,7 @@ class WindowsHost(Host):
             pe = f.read(6)
         return len(pe) == 6 and pe[:4] == b'PE\x00\x00' and int.from_bytes(pe[4:6], 'little') == 0x20b
 
-    def extra_tool_repos(self) -> list[str]:
+    def extra_ndk_repos(self) -> list[str]:
         return ['platform/ndk']
 
     def tools_cmake_cfg(self, prefix: Path) -> dict[str, str | Path]:
@@ -941,21 +939,19 @@ def create_host() -> Host:
 def main():
     host = create_host()
     actions: dict[str, Callable[[], object]] = {
-        'clone':       lambda: (host.clone_llvm(), host.clone_tools(), host.clone_rust()),
-        'clone-llvm':  host.clone_llvm,
-        'clone-tools': host.clone_tools,
-        'clone-rust':  host.clone_rust,
-        'build':       lambda: (host.build_llvm(), host.build_tools(), host.build_rust()),
-        'build-llvm':  host.build_llvm,
-        'build-tools': host.build_tools,
-        'build-rust':  host.build_rust,
-        'ndk':         host.package_ndk,
-        'dist':        lambda: (rm_rf(DIST_DIR), host.dist()),
-        'clean':       lambda: (rm_rf(SRC_DIR, BUILD_DIR, OUT_DIR, DIST_DIR), rm_glob(ROOT, 'android-ndk-*.zip*')),
+        'clone':      lambda: (host.clone_ndk(), host.clone_rust()),
+        'clone-ndk':  host.clone_ndk,
+        'clone-rust': host.clone_rust,
+        'build':      lambda: (host.build_ndk(), host.build_rust()),
+        'build-ndk':  host.build_ndk,
+        'build-rust': host.build_rust,
+        'package':    host.package,
+        'dist':       lambda: (rm_rf(DIST_DIR), host.dist()),
+        'clean':      lambda: (rm_rf(SRC_DIR, BUILD_DIR, OUT_DIR, DIST_DIR), rm_glob(ROOT, 'android-ndk-*.zip*')),
     }
 
     parser = argparse.ArgumentParser(description='Build and package Oxidized NDK (ONDK)')
-    parser.add_argument('actions', nargs='*', default=['clone', 'build', 'ndk', 'dist'],
+    parser.add_argument('actions', nargs='*', default=['clone', 'build', 'package', 'dist'],
                         choices=list(actions), metavar='ACTION',
                         help=f"Actions to run ({', '.join(actions)})")
     args = parser.parse_args()
