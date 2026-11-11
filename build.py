@@ -461,7 +461,7 @@ class Host:
         })
 
     def build_llvm(self):
-        rm_rf(OUT_DIR / 'llvm', OUT_DIR / 'lld', OUT_DIR / 'zlib', OUT_DIR / 'zstd')
+        rm_rf(OUT_DIR / 'llvm', OUT_DIR / 'zlib', OUT_DIR / 'zstd')
         self.build_llvm_deps()
         llvm_out = OUT_DIR / 'llvm'
         cfg = self.llvm_cmake_cfg(llvm_out) | {'LLVM_LINK_LLVM_DYLIB': 'ON'}
@@ -812,7 +812,7 @@ class WindowsHost(Host):
             'LLVM_ENABLE_LIBCXX': 'ON',
             'LLVM_ENABLE_PLUGINS': 'OFF',
             'LLVM_USE_SYMLINKS': 'ON',
-            'LLVM_ENABLE_PROJECTS': 'clang;clang-tools-extra;polly',
+            'LLVM_ENABLE_PROJECTS': 'clang;lld;clang-tools-extra;polly',
             'LLVM_HOST_TRIPLE': win_gnu_triple,
             'LLVM_DEFAULT_TARGET_TRIPLE': win_gnu_triple,
             'CLANG_DEFAULT_RTLIB': 'compiler-rt',
@@ -823,7 +823,6 @@ class WindowsHost(Host):
     def build_llvm(self):
         super().build_llvm()
         llvm_out = OUT_DIR / 'llvm'
-        llvm_src = SRC_DIR / 'llvm-project/llvm'
 
         # Build libclang_rt.builtins-${ARCH}.a for self-contained host linking
         clang_res_dir = next((llvm_out / 'lib/clang').glob('*'))
@@ -838,14 +837,6 @@ class WindowsHost(Host):
                 'LLVM_CMAKE_DIR': llvm_out / 'lib/cmake/llvm',
             },
         )
-
-        # Build LLD statically (without LLVM_LINK_LLVM_DYLIB) to prevent flakiness
-        lld_cfg = self.llvm_cmake_cfg(OUT_DIR / 'lld') | {
-            'LLVM_ENABLE_PROJECTS': 'lld',
-            'LLVM_BUILD_TOOLS': 'OFF',
-            'CMAKE_EXE_LINKER_FLAGS': '-s -static',
-        }
-        self.cmake_install(llvm_src, BUILD_DIR / 'lld', lld_cfg)
 
     def rust_bootstrap_cfg(self, env: dict[str, str]) -> dict[str, Any]:
         # Prevent cc-rs from inheriting -flto=thin from rustc flags
@@ -898,13 +889,13 @@ class WindowsHost(Host):
         llvm_bin = llvm_dir / 'bin'
         rust_bin = rust_dir / 'bin'
 
-        # 1. Install Clang/LLVM binaries, runtime DLLs, and static LLD into llvm/bin
+        # 1. Install Clang/LLVM binaries and runtime DLLs into llvm/bin
+        for name in ('lld.exe', 'lld-link.exe', 'ld64.lld.exe'):
+            (llvm_bin / name).touch()
         overlay_dir(OUT_DIR / 'llvm/bin', llvm_bin, ignore_suffix='.dll')
+        symlink_rel(llvm_bin / 'lld.exe', llvm_bin / 'ld.exe')
         for dll in (OUT_DIR / 'llvm/bin').glob('*.dll'):
             copy_file(dll, llvm_bin / dll.name)
-
-        copy_tree(OUT_DIR / 'lld/bin', llvm_bin)
-        symlink_rel(llvm_bin / 'lld.exe', llvm_bin / 'ld.exe')
 
         # 2. Bundle MinGW runtime DLLs and deduplicate shared DLLs in rust/bin via symlinks
         self.bundle_mingw_dlls(llvm_bin / 'clang.exe', llvm_bin, [llvm_bin])
