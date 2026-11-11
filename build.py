@@ -34,6 +34,7 @@ AOSP_URL = 'https://android.googlesource.com'
 
 ROOT = Path(__file__).resolve().parent
 SRC_DIR = ROOT / 'src'
+BUILD_DIR = ROOT / 'build'
 OUT_DIR = ROOT / 'out'
 DIST_DIR = ROOT / 'dist'
 PATCHES_DIR = ROOT / 'patches'
@@ -369,18 +370,19 @@ class Host:
 
     def build_tools(self):
         tools_out = OUT_DIR / 'tools'
-        specs: list[tuple[str, str, dict[str, str | Path]]] = [
-            ('shaderc', 'build-shaderc', {
+        rm_rf(tools_out)
+        specs: list[tuple[str, dict[str, str | Path]]] = [
+            ('shaderc', {
                 'SHADERC_SKIP_TESTS': 'ON',
                 'SHADERC_SKIP_EXAMPLES': 'ON',
                 'SHADERC_SKIP_COPYRIGHT_CHECK': 'ON',
                 'SPIRV-Headers_SOURCE_DIR': SRC_DIR / 'shaderc/third_party/spirv-headers',
             }),
-            ('make', 'build-make', {'CMAKE_C_STANDARD': '17'}),
-            ('yasm', 'build-yasm', {'BUILD_SHARED_LIBS': 'OFF', 'YASM_BUILD_TESTS': 'OFF'}),
+            ('make', {'CMAKE_C_STANDARD': '17'}),
+            ('yasm', {'BUILD_SHARED_LIBS': 'OFF', 'YASM_BUILD_TESTS': 'OFF'}),
         ]
-        for src_name, build_name, extra in specs:
-            self.cmake_install(SRC_DIR / src_name, tools_out / build_name, self.tools_cmake_cfg(tools_out) | extra)
+        for name, extra in specs:
+            self.cmake_install(SRC_DIR / name, BUILD_DIR / name, self.tools_cmake_cfg(tools_out) | extra)
 
     def llvm_cmake_cfg(self, prefix: Path) -> dict[str, str | Path]:
         ver_src = (SRC_DIR / 'llvm_android/src/llvm_android/android_version.py').read_text()
@@ -429,14 +431,14 @@ class Host:
         }
 
     def build_llvm_deps(self):
-        self.cmake_install(SRC_DIR / 'zlib', OUT_DIR / 'zlib/build', self.tools_cmake_cfg(OUT_DIR / 'zlib') | {
+        self.cmake_install(SRC_DIR / 'zlib', BUILD_DIR / 'zlib', self.tools_cmake_cfg(OUT_DIR / 'zlib') | {
             'CMAKE_INSTALL_LIBDIR': 'lib',
             'CMAKE_POSITION_INDEPENDENT_CODE': 'ON',
             'ZLIB_COMPAT': 'ON',
             'BUILD_SHARED_LIBS': 'OFF',
             'BUILD_TESTING': 'OFF',
         })
-        self.cmake_install(SRC_DIR / 'zstd/build/cmake', OUT_DIR / 'zstd/build', self.tools_cmake_cfg(OUT_DIR / 'zstd') | {
+        self.cmake_install(SRC_DIR / 'zstd/build/cmake', BUILD_DIR / 'zstd', self.tools_cmake_cfg(OUT_DIR / 'zstd') | {
             'CMAKE_INSTALL_LIBDIR': 'lib',
             'CMAKE_POSITION_INDEPENDENT_CODE': 'ON',
             'ZSTD_BUILD_PROGRAMS': 'OFF',
@@ -444,13 +446,15 @@ class Host:
         })
 
     def build_llvm(self):
+        rm_rf(OUT_DIR / 'llvm', OUT_DIR / 'lld', OUT_DIR / 'zlib', OUT_DIR / 'zstd')
         self.build_llvm_deps()
         llvm_out = OUT_DIR / 'llvm'
         cfg = self.llvm_cmake_cfg(llvm_out) | {'LLVM_LINK_LLVM_DYLIB': 'ON'}
-        self.cmake_install(SRC_DIR / 'llvm-project/llvm', llvm_out / 'build', cfg)
+        self.cmake_install(SRC_DIR / 'llvm-project/llvm', BUILD_DIR / 'llvm', cfg)
 
     def rust_bootstrap_cfg(self, env: dict[str, str]) -> dict[str, Any]:
         cfg = tomllib.loads((ROOT / 'bootstrap.toml').read_text())
+        cfg.setdefault('build', {})['build-dir'] = (BUILD_DIR / 'rust').as_posix()
         cfg.setdefault('install', {})['prefix'] = (OUT_DIR / 'rust').as_posix()
         cfg.setdefault('target', {})[self.triple] = {
             'llvm-config': (OUT_DIR / f'llvm/bin/llvm-config{self.exe_suffix}').as_posix(),
@@ -460,8 +464,8 @@ class Host:
     def build_rust(self):
         rm_rf(OUT_DIR / 'rust')
         env = os.environ.copy()
-        OUT_DIR.mkdir(parents=True, exist_ok=True)
-        cfg_path = OUT_DIR / 'bootstrap.toml'
+        BUILD_DIR.mkdir(parents=True, exist_ok=True)
+        cfg_path = BUILD_DIR / 'bootstrap.toml'
         cfg_path.write_text(dump_toml(self.rust_bootstrap_cfg(env)))
 
         run([sys.executable, './x.py', '--config', cfg_path.as_posix(), '--build', self.triple, 'install'],
@@ -471,7 +475,7 @@ class Host:
 
     def prepare_ndk(self) -> dict[Path, str]:
         ndk_zip = ROOT / f'android-ndk-{NDK_VERSION}-{self.os_name}.zip'
-        extract_tmp = OUT_DIR / 'ndk-tmp'
+        extract_tmp = BUILD_DIR / 'ndk-tmp'
 
         if not ndk_zip.exists():
             url = f'https://dl.google.com/android/repository/{ndk_zip.name}'
@@ -702,7 +706,7 @@ class DarwinHost(Host):
 
     def rust_bootstrap_cfg(self, env: dict[str, str]) -> dict[str, Any]:
         # Clang infers --target=<triple> from argv[0] when invoked via <triple>-clang
-        shim_dir = OUT_DIR / 'bin'
+        shim_dir = BUILD_DIR / 'cc-shims'
         rm_rf(shim_dir)
         shim_dir.mkdir(parents=True, exist_ok=True)
         for tool in ('clang', 'clang++'):
@@ -806,7 +810,7 @@ class WindowsHost(Host):
         clang_res_dir = next((llvm_out / 'lib/clang').glob('*'))
         self.cmake_install(
             SRC_DIR / 'llvm-project/compiler-rt/lib/builtins',
-            llvm_out / 'builtins-build',
+            BUILD_DIR / 'builtins',
             {
                 'CMAKE_BUILD_TYPE': 'Release',
                 'CMAKE_INSTALL_PREFIX': clang_res_dir,
@@ -822,14 +826,14 @@ class WindowsHost(Host):
             'LLVM_BUILD_TOOLS': 'OFF',
             'CMAKE_EXE_LINKER_FLAGS': '-s -static',
         }
-        self.cmake_install(llvm_src, OUT_DIR / 'lld/build', lld_cfg)
+        self.cmake_install(llvm_src, BUILD_DIR / 'lld', lld_cfg)
 
     def rust_bootstrap_cfg(self, env: dict[str, str]) -> dict[str, Any]:
         # Prevent cc-rs from inheriting -flto=thin from rustc flags
         env['CFLAGS'] = '-fno-lto'
         env['CXXFLAGS'] = '-fno-lto'
 
-        dlls_dir = OUT_DIR / 'llvm/dlls'
+        dlls_dir = BUILD_DIR / 'llvm-dlls'
         rm_rf(dlls_dir)
         dlls_dir.mkdir(parents=True)
         for dll in (OUT_DIR / 'llvm/bin').glob('*.dll'):
@@ -941,14 +945,13 @@ def main():
         'clone-llvm':  host.clone_llvm,
         'clone-tools': host.clone_tools,
         'clone-rust':  host.clone_rust,
-        'build':       lambda: (rm_rf(*(OUT_DIR / d for d in ('llvm', 'lld', 'zlib', 'zstd', 'tools'))),
-                                host.build_llvm(), host.build_tools(), host.build_rust()),
-        'build-llvm':  lambda: (rm_rf(*(OUT_DIR / d for d in ('llvm', 'lld', 'zlib', 'zstd'))), host.build_llvm()),
-        'build-tools': lambda: (rm_rf(OUT_DIR / 'tools'), host.build_tools()),
+        'build':       lambda: (host.build_llvm(), host.build_tools(), host.build_rust()),
+        'build-llvm':  host.build_llvm,
+        'build-tools': host.build_tools,
         'build-rust':  host.build_rust,
         'ndk':         host.package_ndk,
         'dist':        lambda: (rm_rf(DIST_DIR), host.dist()),
-        'clean':       lambda: (rm_rf(SRC_DIR, OUT_DIR, DIST_DIR), rm_glob(ROOT, 'android-ndk-*.zip*')),
+        'clean':       lambda: (rm_rf(SRC_DIR, BUILD_DIR, OUT_DIR, DIST_DIR), rm_glob(ROOT, 'android-ndk-*.zip*')),
     }
 
     parser = argparse.ArgumentParser(description='Build and package Oxidized NDK (ONDK)')
