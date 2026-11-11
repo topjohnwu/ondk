@@ -35,14 +35,12 @@ jobs:
             /usr/local/lib/android
 
       - name: Build toolchain
+        env:
+          LINUX_HOST_LLVM_SUFFIX: "-22"
         run: |
-          sudo apt-get update
-          sudo apt-get -y install cmake ninja-build binutils-dev
-          wget https://apt.llvm.org/llvm.sh
-          chmod +x llvm.sh
-          sudo ./llvm.sh 22
-          sudo apt-get -y install libc++-22-dev libc++abi-22-dev
-          rm llvm.sh
+          LLVM_VER=${LINUX_HOST_LLVM_SUFFIX#-}
+          curl -fsSL https://apt.llvm.org/llvm.sh | sudo bash -s -- "$LLVM_VER"
+          sudo apt-get -y install cmake ninja-build binutils-dev "libc++-$LLVM_VER-dev" "libc++abi-$LLVM_VER-dev"
           ./build.py
 
       - name: Upload build artifact

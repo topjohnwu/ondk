@@ -608,9 +608,9 @@ class LinuxHost(Host):
     def __init__(self, arch: str):
         super().__init__(arch)
         self.triple = f'{arch}-unknown-linux-gnu'
-        ver = os.environ.get('LINUX_HOST_LLVM_VER', '22')
-        self.cc = f'clang-{ver}'
-        self.cxx = f'clang++-{ver}'
+        suffix = os.environ.get('LINUX_HOST_LLVM_SUFFIX', '')
+        self.cc = f'clang{suffix}'
+        self.cxx = f'clang++{suffix}'
 
     def is_host_binary(self, path: Path) -> bool:
         if path.is_symlink() or not path.is_file():
