@@ -29,8 +29,8 @@ import xml.etree.ElementTree as ET
 RUST_VERSION = '1.97.1'
 ZLIB_VERSION = '2.3.3'
 YASM_COMMIT = '09d1bc90ed53d0ec3e9b074f111058cbf262ed56'
-NDK_VERSION = 'r30-beta2'
-OUTPUT_VERSION = 'r30.1'
+NDK_VERSION = 'r30'
+OUTPUT_VERSION = 'r30.2'
 
 AOSP_URL = 'https://android.googlesource.com'
 
@@ -622,7 +622,7 @@ class Host:
                 'lib/liblldb*', 'lib/libpython*', 'lib/python*', 'lib/site-packages',
                 'lib/libxml2*', 'lib/libedit*', 'lib/libncurses*', 'lib/libform*',
                 'lib/libpanel*', 'lib/liblzma*', 'lib/libwinpthread*', 'lib/libc++*',
-                'lib/libunwind*', 'lib/libsimpleperf_readelf.a', 'lib/LLVMPolly.so',
+                'lib/libc_musl*', 'lib/libunwind*', 'lib/libsimpleperf_readelf.a', 'lib/LLVMPolly.so',
                 'lib/*-linux-*', 'lib/*-windows-*')
         rm_glob(ONDK_DIR, 'ndk-gdb*', 'ndk-lldb*', 'ndk-stack*',
                 f'shader-tools/{self.ndk_dirname}/libc++*', f'simpleperf/bin/{self.os_name}')
