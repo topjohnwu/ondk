@@ -64,8 +64,10 @@ def apply_patch(target_dir: Path, patch_file: Path):
     subprocess.run(['patch', '-p1'], cwd=target_dir, input=data, check=True)
 
 
-def parallel(*tasks: Callable[[], object]):
-    with ThreadPoolExecutor(max_workers=len(tasks)) as pool:
+def parallel(*tasks: Callable[[], object], max_workers: int | None = None):
+    if not tasks:
+        return
+    with ThreadPoolExecutor(max_workers=max_workers or len(tasks)) as pool:
         futures = [pool.submit(fn) for fn in tasks]
         for fut in futures:
             fut.result()
@@ -76,25 +78,77 @@ def _remove_readonly(func: Callable[..., Any], path: str, _: Any):
     func(path)
 
 
+def _rm_batch_unix(batch: list[str]):
+    if subprocess.run(['rm', '-rf', '--', *batch], stderr=subprocess.DEVNULL).returncode != 0:
+        existing = [p for p in batch if os.path.lexists(p)]
+        if existing:
+            subprocess.run(['chmod', '-R', 'u+rwX', '--', *existing])
+            run(['rm', '-rf', '--', *existing])
+
+
+def _rmtree_unix(dirs: list[Path]):
+    abs_dirs = list(dict.fromkeys(Path(os.path.abspath(d)) for d in dirs))
+    dir_set = set(abs_dirs)
+    frontier = deque(str(d) for d in abs_dirs if not any(p in dir_set for p in d.parents))
+
+    workers = min(os.cpu_count() or 4, 16)
+    target_shards = workers * 8
+    skeletons: list[str] = []
+    targets: list[str] = []
+
+    while frontier and len(frontier) + len(targets) // 64 < target_shards:
+        d = frontier.popleft()
+        if not os.access(d, os.W_OK | os.X_OK):
+            os.chmod(d, stat.S_IRWXU)
+        skeletons.append(d)
+        with os.scandir(d) as it:
+            for entry in it:
+                if entry.is_dir(follow_symlinks=False):
+                    frontier.append(entry.path)
+                else:
+                    targets.append(entry.path)
+
+    targets.extend(frontier)
+    if targets:
+        num_batches = min(len(targets), workers * 4)
+        batches = [targets[i::num_batches] for i in range(num_batches)]
+        parallel(*(lambda b=b: _rm_batch_unix(b) for b in batches), max_workers=workers)
+
+    for d in reversed(skeletons):
+        os.rmdir(d)
+
+
 def rm_rf(*paths: Path):
-    for p in paths:
-        if p.is_symlink() or p.is_file():
+    dirs: list[Path] = []
+    for p in dict.fromkeys(paths):
+        try:
+            mode = p.lstat().st_mode
+        except FileNotFoundError:
+            continue
+        if stat.S_ISDIR(mode):
+            dirs.append(p)
+        else:
             try:
                 p.unlink()
             except PermissionError:
-                os.chmod(p, stat.S_IWRITE)
-                p.unlink()
-        elif p.exists():
-            if sys.version_info >= (3, 12):
-                shutil.rmtree(p, onexc=_remove_readonly)
-            else:
-                shutil.rmtree(p, onerror=_remove_readonly)
+                if os.name == 'nt' and stat.S_ISLNK(mode):
+                    p.rmdir()
+                else:
+                    os.chmod(p, stat.S_IWRITE)
+                    p.unlink()
+    if dirs:
+        if os.name == 'nt':
+            for d in dirs:
+                if sys.version_info >= (3, 12):
+                    shutil.rmtree(d, onexc=_remove_readonly)
+                else:
+                    shutil.rmtree(d, onerror=_remove_readonly)
+        else:
+            _rmtree_unix(dirs)
 
 
 def rm_glob(base: Path, *patterns: str):
-    for pat in patterns:
-        for p in base.glob(pat):
-            rm_rf(p)
+    rm_rf(*(p for pat in patterns for p in base.glob(pat)))
 
 
 def copy_file(src: Path, dst: Path):
@@ -323,8 +377,8 @@ class Host:
         return []
 
     def clone_ndk(self):
-        for name in ('llvm-project', 'llvm_android', 'toolchain-utils', 'zstd', 'zlib', 'shaderc', 'make', 'yasm', 'ndk'):
-            rm_rf(SRC_DIR / name)
+        ndk_dirs = ('llvm-project', 'llvm_android', 'toolchain-utils', 'zstd', 'zlib', 'shaderc', 'make', 'yasm', 'ndk')
+        rm_rf(*(SRC_DIR / name for name in ndk_dirs))
 
         ndk_tag = f'ndk-{NDK_VERSION}'
         clang_ver = extract_var(gitiles_text(f'platform/ndk/+/refs/tags/{ndk_tag}/ndk/toolchains.py'), 'CLANG_VERSION')
