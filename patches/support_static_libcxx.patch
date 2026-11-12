@@ -1,8 +1,8 @@
 diff --git a/compiler/rustc_llvm/build.rs b/compiler/rustc_llvm/build.rs
-index ed1b75be..eab60ae2 100644
+index 450b98f20..f86e49aec 100644
 --- a/compiler/rustc_llvm/build.rs
 +++ b/compiler/rustc_llvm/build.rs
-@@ -495,7 +495,6 @@ fn main() {
+@@ -512,7 +512,6 @@ fn main() {
      // C++ runtime library
      if !target.contains("msvc") {
          if let Some(s) = llvm_static_stdcpp {
@@ -11,10 +11,10 @@ index ed1b75be..eab60ae2 100644
              println!("cargo:rustc-link-search=native={}", path.parent().unwrap().display());
              if target.contains("windows") {
 diff --git a/src/bootstrap/src/core/build_steps/compile.rs b/src/bootstrap/src/core/build_steps/compile.rs
-index 68a4f928..0ea9916a 100644
+index b1157ef38..36c1147d0 100644
 --- a/src/bootstrap/src/core/build_steps/compile.rs
 +++ b/src/bootstrap/src/core/build_steps/compile.rs
-@@ -1494,8 +1494,11 @@ fn rustc_llvm_env(builder: &Builder<'_>, cargo: &mut Cargo, target: TargetSelect
+@@ -1480,8 +1480,11 @@ fn rustc_llvm_env(builder: &Builder<'_>, cargo: &mut Cargo, target: TargetSelect
          && !target.contains("apple")
          && !target.contains("solaris")
      {

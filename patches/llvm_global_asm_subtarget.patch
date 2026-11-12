@@ -1,0 +1,61 @@
+diff --git a/llvm/lib/Object/ModuleSymbolTable.cpp b/llvm/lib/Object/ModuleSymbolTable.cpp
+index 170677291..cbfd5a5a0 100644
+--- a/llvm/lib/Object/ModuleSymbolTable.cpp
++++ b/llvm/lib/Object/ModuleSymbolTable.cpp
+@@ -35,6 +35,7 @@
+ #include "llvm/MC/TargetRegistry.h"
+ #include "llvm/Object/SymbolicFile.h"
+ #include "llvm/Support/Casting.h"
++#include "llvm/Support/Error.h"
+ #include "llvm/Support/ErrorHandling.h"
+ #include "llvm/Support/MemoryBuffer.h"
+ #include "llvm/Support/SMLoc.h"
+@@ -64,6 +65,36 @@ void ModuleSymbolTable::addModule(Module *M) {
+   });
+ }
+ 
++static void getGlobalAsmSubtarget(const Module &M, std::string &CPU,
++                                  std::string &Features) {
++  const NamedMDNode *NMD = M.getNamedMetadata("llvm.global_asm.subtarget");
++  if (!NMD && !M.isMaterialized()) {
++    // Lazy bitcode readers defer metadata past addModule(); materialize on demand.
++    consumeError(const_cast<Module &>(M).materializeMetadata());
++    NMD = M.getNamedMetadata("llvm.global_asm.subtarget");
++  }
++  if (!NMD)
++    return;
++
++  for (const MDNode *Op : NMD->operands()) {
++    if (!Op || Op->getNumOperands() < 2)
++      continue;
++    if (auto *MDS = dyn_cast_or_null<MDString>(Op->getOperand(0))) {
++      StringRef EntryCPU = MDS->getString();
++      if (!EntryCPU.empty() && (CPU.empty() || CPU == "generic"))
++        CPU = EntryCPU.str();
++    }
++    if (auto *MDS = dyn_cast_or_null<MDString>(Op->getOperand(1))) {
++      StringRef EntryFS = MDS->getString();
++      if (!EntryFS.empty()) {
++        if (!Features.empty())
++          Features += ',';
++        Features += EntryFS;
++      }
++    }
++  }
++}
++
+ static void
+ initializeRecordStreamer(const Module &M,
+                          function_ref<void(RecordStreamer &)> Init) {
+@@ -90,8 +121,10 @@ initializeRecordStreamer(const Module &M,
+   if (!MAI)
+     return;
+ 
++  std::string SubtargetCPU, SubtargetFeatures;
++  getGlobalAsmSubtarget(M, SubtargetCPU, SubtargetFeatures);
+   std::unique_ptr<MCSubtargetInfo> STI(
+-      T->createMCSubtargetInfo(TT.str(), "", ""));
++      T->createMCSubtargetInfo(TT.str(), SubtargetCPU, SubtargetFeatures));
+   if (!STI)
+     return;
+ 

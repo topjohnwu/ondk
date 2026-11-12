@@ -1,10 +1,10 @@
 diff --git a/compiler/rustc_codegen_llvm/src/abi.rs b/compiler/rustc_codegen_llvm/src/abi.rs
-index c3bf566b..99bc7862 100644
+index e16f34483..e07711506 100644
 --- a/compiler/rustc_codegen_llvm/src/abi.rs
 +++ b/compiler/rustc_codegen_llvm/src/abi.rs
-@@ -530,7 +530,7 @@ fn apply_attrs_llfn(
-                 }
-                 PassMode::Indirect { attrs, meta_attrs: None, on_stack: false } => {
+@@ -573,7 +573,7 @@ fn apply_attrs_llfn(
+                     mode: IndirectMode::Pointer,
+                 } => {
                      let i = apply(attrs);
 -                    if cx.sess().opts.optimize != config::OptLevel::No {
 +                    if cx.sess().opts.optimize != config::OptLevel::No && false {
@@ -12,10 +12,10 @@ index c3bf566b..99bc7862 100644
                              llfn,
                              llvm::AttributePlace::Argument(i),
 diff --git a/compiler/rustc_llvm/llvm-wrapper/RustWrapper.cpp b/compiler/rustc_llvm/llvm-wrapper/RustWrapper.cpp
-index 63e3119e..f87cd1fd 100644
+index bc8fa60b6..74f9bf062 100644
 --- a/compiler/rustc_llvm/llvm-wrapper/RustWrapper.cpp
 +++ b/compiler/rustc_llvm/llvm-wrapper/RustWrapper.cpp
-@@ -475,7 +475,11 @@ static Attribute::AttrKind fromRust(LLVMRustAttributeKind Kind) {
+@@ -377,7 +377,11 @@ static Attribute::AttrKind fromRust(LLVMRustAttributeKind Kind) {
    case LLVMRustAttributeKind::DeadOnUnwind:
      return Attribute::DeadOnUnwind;
    case LLVMRustAttributeKind::DeadOnReturn:
@@ -27,3 +27,65 @@ index 63e3119e..f87cd1fd 100644
    case LLVMRustAttributeKind::CapturesAddress:
    case LLVMRustAttributeKind::CapturesReadOnly:
    case LLVMRustAttributeKind::CapturesNone:
+@@ -678,7 +682,19 @@ extern "C" void LLVMRustAppendModuleInlineAsm(
+   unwrap(M)->appendModuleInlineAsm(
+       Module::GlobalAsmFragment(std::string(Asm, AsmLen), Props));
+ #else
+-  unwrap(M)->appendModuleInlineAsm(StringRef(Asm, AsmLen));
++  Module *Mod = unwrap(M);
++  StringRef CPU(TargetCPU, TargetCPULen);
++  StringRef Features(TargetFeatures, TargetFeaturesLen);
++  if (!CPU.empty() || !Features.empty()) {
++    LLVMContext &Ctx = Mod->getContext();
++    NamedMDNode *NMD =
++        Mod->getOrInsertNamedMetadata("llvm.global_asm.subtarget");
++    MDNode *Entry = MDNode::get(
++        Ctx, {MDString::get(Ctx, CPU), MDString::get(Ctx, Features)});
++    if (!llvm::is_contained(NMD->operands(), Entry))
++      NMD->addOperand(Entry);
++  }
++  Mod->appendModuleInlineAsm(StringRef(Asm, AsmLen));
+ #endif
+ }
+ 
+@@ -1410,7 +1426,7 @@ LLVMRustBuildMemMove(LLVMBuilderRef B, LLVMValueRef Dst, unsigned DstAlign,
+ }
+ 
+ extern "C" LLVMValueRef LLVMRustBuildVScale(LLVMBuilderRef B, LLVMTypeRef Ty) {
+-  return wrap(unwrap(B)->CreateVScale(unwrap(Ty)));
++  return wrap(unwrap(B)->CreateVScale(ConstantInt::get(unwrap(Ty), 1)));
+ }
+ 
+ extern "C" LLVMValueRef LLVMRustBuildMemSet(LLVMBuilderRef B, LLVMValueRef Dst,
+@@ -1873,7 +1889,7 @@ public:
+           return {getFileIndex(It->S), LineNum};
+       }
+     }
+-    return NotFound;
++    return {0, 0};
+   }
+ 
+ private:
+@@ -1903,7 +1919,7 @@ private:
+     return llvm::SpecialCaseList::inSectionBlame(S.Entries, Prefix, Query,
+                                                  Category);
+   }
+-  static unsigned getFileIndex(const Section &S) { return S.FileIdx; }
++  static unsigned getFileIndex(const Section &S) { return 0; }
+ #endif
+ 
+   void createSanitizerSections() {
+@@ -1912,7 +1928,12 @@ private:
+ #else
+     const auto &SecList = Sections;
+ #endif
+-    for (const auto &S : SecList) {
++    for (const auto &Entry : SecList) {
++#if LLVM_VERSION_GE(22, 0)
++      const auto &S = Entry;
++#else
++      const auto &S = Entry.getValue();
++#endif
+       uint32_t Mask = 0;
+ 
+       // All sanitizers: [all]

@@ -26,7 +26,7 @@ import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
 
-RUST_VERSION = '1.97.1'
+RUST_VERSION = '1.100.0'
 ZLIB_VERSION = '2.3.3'
 YASM_COMMIT = '09d1bc90ed53d0ec3e9b074f111058cbf262ed56'
 NDK_VERSION = 'r30'
@@ -458,6 +458,8 @@ class Host:
         if rc:
             sys.exit(rc)
 
+        apply_patch(SRC_DIR / 'llvm-project', PATCHES_DIR / 'llvm_global_asm_subtarget.patch')
+
     def clone_rust(self):
         rust_dir = SRC_DIR / 'rust'
         git_clone_branch('https://github.com/rust-lang/rust', RUST_VERSION)
@@ -761,7 +763,7 @@ class LinuxHost(Host):
         env['LD_LIBRARY_PATH'] = str(OUT_DIR / 'llvm/lib')
         cfg = super().rust_bootstrap_cfg(env)
         cfg['llvm'] |= {'use-libcxx': True, 'static-libstdcpp': True}
-        cfg['rust'] |= {'use-lld': True}
+        cfg['rust'] |= {'bootstrap-override-lld': 'external'}
         cfg['target'][self.triple] |= {'cc': self.cc, 'cxx': self.cxx, 'linker': self.cc}
         return cfg
 
@@ -842,7 +844,7 @@ class DarwinHost(Host):
 
         cc = f'{self.triple}-clang'
         cfg = super().rust_bootstrap_cfg(env)
-        cfg['target'][self.triple] |= {'jemalloc': True, 'cc': cc, 'cxx': f'{cc}++', 'linker': cc}
+        cfg['target'][self.triple] |= {'allocator': 'jemalloc', 'cc': cc, 'cxx': f'{cc}++', 'linker': cc}
         return cfg
 
 
@@ -955,7 +957,7 @@ class WindowsHost(Host):
 
         cfg = super().rust_bootstrap_cfg(env)
         cfg['llvm'] |= {'use-libcxx': True}
-        cfg['rust'] |= {'use-lld': True}
+        cfg['rust'] |= {'bootstrap-override-lld': 'external'}
         cfg['target'][self.triple] |= {'cc': 'clang', 'cxx': 'clang++', 'linker': 'clang'}
         return cfg
 

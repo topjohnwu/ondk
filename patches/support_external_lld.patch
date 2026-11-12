@@ -1,15 +1,28 @@
+diff --git a/src/bootstrap/src/core/build_steps/llvm.rs b/src/bootstrap/src/core/build_steps/llvm.rs
+index 7f0aa2a27..ef7567481 100644
+--- a/src/bootstrap/src/core/build_steps/llvm.rs
++++ b/src/bootstrap/src/core/build_steps/llvm.rs
+@@ -1672,7 +1672,7 @@ fn run(self, builder: &Builder<'_>) -> PathBuf {
+         // we usually expect here is `./build/$triple/ci-llvm/`, with the binaries in its `bin`
+         // subfolder. We check if that's the case, and if LLD's binary already exists there next to
+         // `llvm-config`: if so, we can use it instead of building LLVM/LLD from source.
+-        if matches!(llvm_output.kind, LlvmKind::DownloadedFromCi) {
++        if matches!(llvm_output.kind, LlvmKind::DownloadedFromCi | LlvmKind::External) {
+             let bin_dir = llvm_output.root_dir().join("bin");
+             let lld_path = bin_dir.join(exe("lld", target));
+             if lld_path.exists() {
 diff --git a/src/bootstrap/src/core/config/config.rs b/src/bootstrap/src/core/config/config.rs
-index b933e668..290bd4e2 100644
+index f8b00094a..24f0f41ed 100644
 --- a/src/bootstrap/src/core/config/config.rs
 +++ b/src/bootstrap/src/core/config/config.rs
-@@ -1103,10 +1103,6 @@ impl Config {
+@@ -1178,10 +1178,6 @@ pub(crate) fn parse_inner(
              );
          }
-
+ 
 -        if lld_enabled && is_host_system_llvm {
 -            panic!("Cannot enable LLD with `rust.lld = true` when using external llvm-config.");
 -        }
 -
          let download_rustc = download_rustc_commit.is_some();
-
+ 
          let stage = match flags_cmd {

@@ -1,4 +1,4 @@
-change-id = 148671
+change-id = 162423
 
 [llvm]
 download-ci-llvm = false
@@ -10,7 +10,7 @@ submodules = false
 extended = true
 tools = [
     "cargo",
-    "src",
+    "rust-src",
     "clippy",
     "rustfmt",
     "rust-analyzer",
