@@ -73,9 +73,37 @@ def parallel(*tasks: Callable[[], object], max_workers: int | None = None):
             fut.result()
 
 
-def _remove_readonly(func: Callable[..., Any], path: str, _: Any):
-    os.chmod(path, stat.S_IWRITE)
-    func(path)
+def _force_remove(func: Callable[..., Any], path: str | Path, exc: BaseException):
+    if isinstance(exc, FileNotFoundError):
+        return
+    if os.name == 'nt' and func in (os.unlink, os.rmdir):
+        try:
+            os.chmod(path, stat.S_IWRITE, follow_symlinks=False)
+            if func is os.unlink:
+                os.unlink(path)
+                return
+            for attempt in range(5):
+                try:
+                    os.rmdir(path)
+                    return
+                except FileNotFoundError:
+                    return
+                except OSError:
+                    if attempt == 4:
+                        raise
+                    time.sleep(0.01 * (attempt + 1))
+        except FileNotFoundError:
+            return
+    raise exc
+
+
+def _unlink(path: str | Path):
+    try:
+        os.unlink(path)
+    except FileNotFoundError:
+        pass
+    except PermissionError as e:
+        _force_remove(os.unlink, path, e)
 
 
 def _rm_batch_unix(batch: list[str]):
@@ -86,65 +114,68 @@ def _rm_batch_unix(batch: list[str]):
             run(['rm', '-rf', '--', *existing])
 
 
-def _rmtree_unix(dirs: list[Path]):
+def _rmtree(dirs: list[Path]):
+    is_nt = os.name == 'nt'
     abs_dirs = list(dict.fromkeys(Path(os.path.abspath(d)) for d in dirs))
     dir_set = set(abs_dirs)
     frontier = deque(str(d) for d in abs_dirs if not any(p in dir_set for p in d.parents))
 
-    workers = min(os.cpu_count() or 4, 16)
+    workers = min((os.cpu_count() or 4) * (4 if is_nt else 1), 32 if is_nt else 16)
     target_shards = workers * 8
     skeletons: list[str] = []
-    targets: list[str] = []
+    files: list[str] = []
 
-    while frontier and len(frontier) + len(targets) // 64 < target_shards:
+    while frontier and len(frontier) < target_shards and len(skeletons) < target_shards:
         d = frontier.popleft()
-        if not os.access(d, os.W_OK | os.X_OK):
-            os.chmod(d, stat.S_IRWXU)
+        try:
+            if not is_nt and not os.access(d, os.R_OK | os.W_OK | os.X_OK):
+                os.chmod(d, stat.S_IRWXU)
+            with os.scandir(d) as it:
+                entries = list(it)
+        except FileNotFoundError:
+            continue
         skeletons.append(d)
-        with os.scandir(d) as it:
-            for entry in it:
-                if entry.is_dir(follow_symlinks=False):
-                    frontier.append(entry.path)
-                else:
-                    targets.append(entry.path)
+        for entry in entries:
+            if entry.is_dir(follow_symlinks=False) and not entry.is_junction():
+                frontier.append(entry.path)
+            else:
+                files.append(entry.path)
 
-    targets.extend(frontier)
-    if targets:
-        num_batches = min(len(targets), workers * 4)
-        batches = [targets[i::num_batches] for i in range(num_batches)]
-        parallel(*(lambda b=b: _rm_batch_unix(b) for b in batches), max_workers=workers)
+    def batches(items: list[str]) -> list[list[str]]:
+        n = min(len(items), max(workers * 4, (len(items) + 2047) // 2048))
+        return [items[i::n] for i in range(n)] if n else []
+
+    if is_nt:
+        tasks: list[Callable[[], object]] = [
+            *(lambda d=d: shutil.rmtree(d, onexc=_force_remove) for d in frontier),
+            *(lambda b=b: [_unlink(p) for p in b] for b in batches(files)),
+        ]
+    else:
+        tasks = [lambda b=b: _rm_batch_unix(b) for b in batches([*files, *frontier])]
+    parallel(*tasks, max_workers=workers)
 
     for d in reversed(skeletons):
-        os.rmdir(d)
+        try:
+            os.rmdir(d)
+        except OSError as e:
+            _force_remove(os.rmdir, d, e)
 
 
 def rm_rf(*paths: Path):
     dirs: list[Path] = []
     for p in dict.fromkeys(paths):
         try:
-            mode = p.lstat().st_mode
+            st = p.lstat()
         except FileNotFoundError:
             continue
-        if stat.S_ISDIR(mode):
+        if stat.S_ISDIR(st.st_mode) and not (
+            os.name == 'nt' and st.st_reparse_tag == stat.IO_REPARSE_TAG_MOUNT_POINT
+        ):
             dirs.append(p)
         else:
-            try:
-                p.unlink()
-            except PermissionError:
-                if os.name == 'nt' and stat.S_ISLNK(mode):
-                    p.rmdir()
-                else:
-                    os.chmod(p, stat.S_IWRITE)
-                    p.unlink()
+            _unlink(p)
     if dirs:
-        if os.name == 'nt':
-            for d in dirs:
-                if sys.version_info >= (3, 12):
-                    shutil.rmtree(d, onexc=_remove_readonly)
-                else:
-                    shutil.rmtree(d, onerror=_remove_readonly)
-        else:
-            _rmtree_unix(dirs)
+        _rmtree(dirs)
 
 
 def rm_glob(base: Path, *patterns: str):
