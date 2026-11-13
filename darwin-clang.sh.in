@@ -1,0 +1,26 @@
+#!/bin/sh
+for arg in "$@"; do
+    case "$arg" in
+        -c|-E|-S|-M|-MM) exec @REAL@ --target=@TARGET@ "$@" ;;
+    esac
+done
+
+err=$(mktemp) || exec @REAL@ --target=@TARGET@ "$@"
+trap 'rm -f "$err"' EXIT
+
+attempt=0
+while true; do
+    @REAL@ --target=@TARGET@ "$@" 2>"$err"
+    rc=$?
+    if [ "$rc" -eq 0 ]; then
+        cat "$err" >&2
+        exit 0
+    fi
+    attempt=$((attempt + 1))
+    if [ "$attempt" -lt 3 ] && grep -qE "unable to execute command: Segmentation fault|linker command failed due to signal" "$err"; then
+        echo "Warning: Apple linker crashed (attempt $attempt/3), retrying..." >&2
+        continue
+    fi
+    cat "$err" >&2
+    exit "$rc"
+done

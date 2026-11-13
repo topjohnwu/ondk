@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 import platform
 import re
+import shlex
 import shutil
 import stat
 import subprocess
@@ -572,6 +573,15 @@ class Host:
         self.build_tools()
 
     def rust_bootstrap_cfg(self, env: dict[str, str]) -> dict[str, Any]:
+        # Prevent bootstrap and cc-rs from compiling C/C++ deps with -flto=thin, whose
+        # host-clang bitcode may be unreadable by ONDK's older LLVM (e.g. MSYS2 LLVM 23
+        # or Ubuntu clang-22 vs ONDK LLVM 21). Bootstrap injects -flto=thin into
+        # CFLAGS_<triple>/CXXFLAGS_<triple> before appending any existing env value, so
+        # both unprefixed and triple-prefixed variables must carry -fno-lto.
+        triple_u = self.triple.replace('-', '_')
+        for var in ('CFLAGS', 'CXXFLAGS', f'CFLAGS_{triple_u}', f'CXXFLAGS_{triple_u}'):
+            env[var] = f'{env[var]} -fno-lto' if env.get(var) else '-fno-lto'
+
         cfg = tomllib.loads((ROOT / 'bootstrap.toml').read_text())
         cfg.setdefault('build', {})['build-dir'] = (BUILD_DIR / 'rust').as_posix()
         cfg.setdefault('install', {})['prefix'] = (OUT_DIR / 'rust').as_posix()
@@ -831,20 +841,24 @@ class DarwinHost(Host):
         }
 
     def rust_bootstrap_cfg(self, env: dict[str, str]) -> dict[str, Any]:
-        # Clang infers --target=<triple> from argv[0] when invoked via <triple>-clang
+        # Wrap Xcode clang/clang++ to force --target and retry sporadic Apple ld segfaults (rust-lang/rust#158787).
         shim_dir = BUILD_DIR / 'cc-shims'
         rm_rf(shim_dir)
         shim_dir.mkdir(parents=True, exist_ok=True)
+        template = (ROOT / 'darwin-clang.sh.in').read_text()
+        target = shlex.quote(self.triple)
         for tool in ('clang', 'clang++'):
-            (shim_dir / f'{self.triple}-{tool}').symlink_to(self.xcode_bin / tool)
+            shim = shim_dir / tool
+            real = shlex.quote(str(self.xcode_bin / tool))
+            shim.write_text(template.replace('@REAL@', real).replace('@TARGET@', target))
+            shim.chmod(0o755)
 
         env['PATH'] = f"{shim_dir}{os.pathsep}{env['PATH']}"
         env['LZMA_API_STATIC'] = '1'
         env['DYLD_FALLBACK_LIBRARY_PATH'] = str(OUT_DIR / 'llvm/lib')
 
-        cc = f'{self.triple}-clang'
         cfg = super().rust_bootstrap_cfg(env)
-        cfg['target'][self.triple] |= {'allocator': 'jemalloc', 'cc': cc, 'cxx': f'{cc}++', 'linker': cc}
+        cfg['target'][self.triple] |= {'allocator': 'jemalloc', 'cc': 'clang', 'cxx': 'clang++', 'linker': 'clang'}
         return cfg
 
 
@@ -944,10 +958,6 @@ class WindowsHost(Host):
         )
 
     def rust_bootstrap_cfg(self, env: dict[str, str]) -> dict[str, Any]:
-        # Prevent cc-rs from inheriting -flto=thin from rustc flags
-        env['CFLAGS'] = '-fno-lto'
-        env['CXXFLAGS'] = '-fno-lto'
-
         dlls_dir = BUILD_DIR / 'llvm-dlls'
         rm_rf(dlls_dir)
         dlls_dir.mkdir(parents=True)
