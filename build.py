@@ -1003,6 +1003,7 @@ class WindowsHost(Host):
         llvm_bin = llvm_dir / 'bin'
         rust_bin = rust_dir / 'bin'
         rustlib_bin = rust_dir / f'lib/rustlib/{self.triple}/bin'
+        self_contained_bin = rustlib_bin / 'self-contained'
 
         # 1. Install Clang/LLVM binaries and runtime DLLs into llvm/bin
         for name in ('lld.exe', 'lld-link.exe', 'ld64.lld.exe'):
@@ -1012,18 +1013,26 @@ class WindowsHost(Host):
         for dll in (OUT_DIR / 'llvm/bin').glob('*.dll'):
             copy_file(dll, llvm_bin / dll.name)
         self.link_rustlib_tools(rust_dir, llvm_dir)
+        # Keep <arch>-w64-mingw32-clang.exe in bin/self-contained (not rust/bin) so
+        # rustc's detect_self_contained_mingw does not see it on PATH and disable
+        # self-contained mode when the sysroot is accessed through a symlink.
+        self_contained_bin.mkdir(parents=True, exist_ok=True)
+        mingw_clang = self_contained_bin / f'{self.arch}-w64-mingw32-clang.exe'
+        symlink_rel(llvm_bin / 'clang.exe', mingw_clang)
+        symlink_rel(llvm_bin / 'llvm-ar.exe', rust_bin / 'dlltool.exe')
 
         # 2. Bundle MinGW runtime DLLs and deduplicate shared DLLs via symlinks
         self.bundle_mingw_dlls(llvm_bin / 'clang.exe', llvm_bin)
-        for pat in ('libLLVM*.dll', 'libclang-cpp.dll'):
-            for dll in llvm_bin.glob(pat):
-                symlink_rel(dll, rust_bin / dll.name)
         for dll in llvm_bin.glob('libLLVM*.dll'):
-            symlink_rel(dll, rustlib_bin / dll.name)
+            for d in (rust_bin, rustlib_bin, self_contained_bin):
+                symlink_rel(dll, d / dll.name)
+        for dll in llvm_bin.glob('libclang-cpp.dll'):
+            symlink_rel(dll, self_contained_bin / dll.name)
 
         self.bundle_mingw_dlls(rust_bin / 'rustc.exe', rust_bin)
         self.bundle_mingw_dlls(rustlib_bin / 'rust-lld.exe', rustlib_bin)
-        for d in (rust_bin, rustlib_bin):
+        self.bundle_mingw_dlls(mingw_clang, self_contained_bin)
+        for d in (rust_bin, rustlib_bin, self_contained_bin):
             for dll in d.glob('*.dll'):
                 shared = llvm_bin / dll.name
                 if not dll.is_symlink() and shared.is_file():
@@ -1042,10 +1051,6 @@ class WindowsHost(Host):
         win_builtins = next((OUT_DIR / 'llvm/lib/clang').glob('*/lib/windows'))
         clang_lib_dir = next((llvm_dir / 'lib/clang').glob('*/lib'))
         copy_tree(win_builtins, clang_lib_dir / 'windows')
-
-        # 4. Expose clang and llvm-ar as rustc's self-contained host linker and dlltool
-        symlink_rel(llvm_bin / 'clang.exe', rust_bin / f'{self.arch}-w64-mingw32-clang.exe')
-        symlink_rel(llvm_bin / 'llvm-ar.exe', rust_bin / 'dlltool.exe')
 
 
 def create_host() -> Host:
